@@ -1,6 +1,5 @@
 # Pingpong-Online
-Пинг-понг по сети многосессионный  
-Для установки SFML введите  
-  sudo apt-get install libsfml-dev  
-Для сборки  
-  make
+Пинг-понг по сети многосессионный. Для установки SFML введите  
+&nbsp;&nbsp;&nbsp;&nbsp;<b>sudo apt-get install libsfml-dev</b><br>
+Для сборки<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>make</b>
