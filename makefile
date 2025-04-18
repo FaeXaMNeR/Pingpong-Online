@@ -6,7 +6,7 @@ LDLIBS = -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 
 TARGET = game
 
-SRCS = pingpong.cpp Menu.cpp
+SRCS = pingpong.cpp mainmenu.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
