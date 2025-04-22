@@ -139,44 +139,30 @@ int main() {
             switch (event.type) {
                 case sf::Event::Closed:
                     window.close();
-
+                    break;
+                    
                 case sf::Event::KeyPressed:
-                    switch (event.key.code)
-                        case sf::Keyboard::Escape:
-                            Playing = false;
-                            break;
-
-                case sf::Event::KeyReleased:
-                    switch (event.key.code) {
-                        case sf::Keyboard::Up:  
-                        case sf::Keyboard::W:
-                            menu.MoveUp();
-                            break;
-                        case sf::Keyboard::Down:
-                        case sf::Keyboard::S:
-                            menu.MoveDown();
-                            break;
-
-                    case sf::Keyboard::Return:
-                        switch (menu.GetPressedItem()) {
-                            case 0:
-                                Playing = true;
-                                break;
-                            case 1:
-                                //open sound menu
-                                break;
-                            case 2:
-                                window.close();
-                                break;
-                            }
-                        break;
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        Playing = false;
                     }
-                break;
+                    break;
+                    
+                default:
+                    if (!Playing) {
+                        menu.handleInput(event);
+                        if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Enter) {
+                            switch (menu.getSelectedItem()) {
+                                case 0: Playing = true; break;
+                                case 1: /* запуск сервера */ break;
+                                case 2: /* запуск клиента */ break;
+                                case 3: window.close(); break;
+                            }
+                        }
+                    }
+                    break;
             }
-
         }
-
     }
-
+    
     return 0;
 }
