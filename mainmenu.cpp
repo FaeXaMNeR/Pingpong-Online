@@ -1,3 +1,5 @@
+#include <SFML/Network.hpp>
+
 #include "mainmenu.h"
 
 Menu::Menu(float width, float height) {
@@ -15,7 +17,7 @@ Menu::Menu(float width, float height) {
     menu[1].setString("Launch Server");
     menu[1].setPosition(sf::Vector2f(width/2 - 120, height/(MAX_NUMBER_ITEMS+1)*2));
 
-    menu[2].setString("Launch Server");
+    menu[2].setString("Join Server");
     menu[2].setPosition(sf::Vector2f(width/2 - 80, height/(MAX_NUMBER_ITEMS+1)*3));
 
     menu[3].setString("Exit");

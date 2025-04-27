@@ -2,11 +2,11 @@ CXX = g++
 
 CXXFLAGS = -Wall -Wextra -std=c++17
 
-LDLIBS = -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+LDLIBS = -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-network
 
 TARGET = game
 
-SRCS = pingpong.cpp mainmenu.cpp
+SRCS = pingpong.cpp mainmenu.cpp networkmanager.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 

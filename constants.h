@@ -8,7 +8,16 @@ const int WINDOW_Y = 900;
 const int BallRad = 6;
 sf::Vector2f PaddleSize(10, 60);
 
+float initialBallSpeed = 400.f;
+float initialBallAngle = 60.f;
+
 float BallSpeed = 400.f;
 float BallAngle = 75.f;
 
 sf::Vector2f velocity;
+
+
+
+const unsigned short PORT = 50001;
+const float TICK_RATE = 120.f;
+const int BUFFER = 512;

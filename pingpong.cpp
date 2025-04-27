@@ -1,12 +1,22 @@
+#define _USE_MATH_DEFINES
+
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
 #include <sstream>
-#include <math.h>
+#include <cmath>
 
 #include "mainmenu.h"
 #include "constants.h"
+#include "networkmanager.h"
 
+// Определение состояний игры (для управления режимами: меню, офлайн, сервер, клиент)
+enum GameState {
+    MainMenu,
+    OfflineGame,
+    Server,
+    Client
+};
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_X, WINDOW_Y), "PingPong", sf::Style::Titlebar | sf::Style::Close);
@@ -34,7 +44,6 @@ int main() {
     botBorder.setPosition(0, WINDOW_Y-PaddleSize.x);
 
     sf::Font font;
-
     font.loadFromFile("digit.ttf");
 
     int intScore1 = 0;
@@ -64,30 +73,129 @@ int main() {
     ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
 
     sf::Clock clock;
-    bool Playing = false;
+    GameState gameState = MainMenu;
+    NetworkManager networkManager;
+    sf::Clock networkClock;
+
+    // Инициализация скорости мяча при старте
+    velocity.x = BallSpeed * std::cos(BallAngle);
+    velocity.y = BallSpeed * std::sin(BallAngle);
+
+
     while (window.isOpen()) {
-        if (Playing) {   
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            switch (event.type) {
+                case sf::Event::Closed:
+                    window.close();
+                    break;
+
+                case sf::Event::KeyPressed:
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        if (gameState != MainMenu) {
+                            gameState = MainMenu;
+                            networkManager.disconnect();
+                        }
+                    }
+                    break;
+
+                default:
+                    if (gameState == MainMenu) {
+                        menu.handleInput(event);
+                        if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Enter) {
+                            switch (menu.getSelectedItem()) {
+                                case 0: // Play Offline
+                                    gameState = OfflineGame;
+                                    // Сброс состояния игры для новой офлайн-игры
+                                    ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
+                                    paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
+                                    paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
+                                    intScore1 = 0;
+                                    intScore2 = 0;
+                                    strScore1 = std::to_string(intScore1);
+                                    textScore1.setString(strScore1);
+                                    strScore2 = std::to_string(intScore2);
+                                    textScore2.setString(strScore2);
+                                    BallSpeed = 400.f;
+                                    BallAngle = 75.f;
+                                    
+                                    velocity.x = BallSpeed * std::cos(BallAngle);
+                                    velocity.y = BallSpeed * std::sin(BallAngle); 
+                                    clock.restart();
+                                    break;
+                                case 1: // Launch Server
+                                    if (networkManager.startServer(PORT)) {
+                                        gameState = Server;
+                                         // Сброс состояния игры для новой сетевой игры
+                                        ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
+                                        paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
+                                        paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
+                                        intScore1 = 0;
+                                        intScore2 = 0;
+                                        strScore1 = std::to_string(intScore1);
+                                        textScore1.setString(strScore1);
+                                        strScore2 = std::to_string(intScore2);
+                                        textScore2.setString(strScore2);
+                                        BallSpeed = 400.f;
+                                        BallAngle = 75.f; 
+                                        // Пересчет velocity после сброса скорости и угла
+                                        velocity.x = BallSpeed * std::cos(BallAngle); 
+                                        velocity.y = BallSpeed * std::sin(BallAngle); 
+                                        clock.restart();
+                                        networkClock.restart();
+                                    } else {
+                                        std::cerr << "Failed to start server!" << std::endl;
+                                    }
+                                    break;
+                                case 2: // Join Server
+                                    {
+                                        sf::IpAddress serverAddress = "192.168.0.100";
+
+                                        if (networkManager.connectClient(serverAddress, PORT)) {
+                                            gameState = Client;
+                                            clock.restart();
+                                            networkClock.restart();
+                                        } else {
+                                            std::cerr << "Failed to connect to server!" << std::endl;
+                                        }
+                                    }
+                                    break;
+                                case 3: // Exit
+                                    window.close();
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+
+        window.clear(sf::Color::Black);
+
+        if (gameState == MainMenu) {
+            menu.draw(window);
+        } else if (gameState == OfflineGame) {
             float deltaTime = clock.restart().asSeconds();
-            float factor = deltaTime * BallSpeed;
-            velocity.x = std::cos(BallAngle)*factor;
-            velocity.y = std::sin(BallAngle)*factor;
 
-            ball.move(velocity.x, velocity.y);
+            ball.move(velocity * deltaTime);
 
-            if ((ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) || ball.getGlobalBounds().intersects(paddle1.getGlobalBounds())) {
-                ball.move(-velocity.x, -velocity.y);
+            if (ball.getGlobalBounds().intersects(paddle1.getGlobalBounds()) || 
+                ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) 
+            {
                 velocity.x = -velocity.x * 1.05f;
-                velocity.y = -velocity.y * 1.05f;
-                BallSpeed = -BallSpeed * 1.05f;
-                BallAngle = -BallAngle;
+                BallSpeed = std::hypot(velocity.x, velocity.y);
+                
+                ball.move(velocity * deltaTime * 2.0f);
             }
 
 
-            if (ball.getGlobalBounds().intersects(topBorder.getGlobalBounds()) || ball.getGlobalBounds().intersects(botBorder.getGlobalBounds())) {
-                velocity.x = -velocity.x;
-                BallAngle = -BallAngle;
+            if (ball.getGlobalBounds().intersects(topBorder.getGlobalBounds()) || 
+                ball.getGlobalBounds().intersects(botBorder.getGlobalBounds())) 
+            {
+                velocity.y = -velocity.y;
             }
 
+            
             if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(paddle1.getGlobalBounds().intersects(topBorder.getGlobalBounds()))) 
                 paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
             if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(paddle1.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
@@ -98,24 +206,27 @@ int main() {
             if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && !(paddle2.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
                 paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
 
-            if (ball.getPosition().x > paddle2.getPosition().x + 2*BallRad) {
-                intScore1++;
-                strScore1 = std::to_string(intScore1);
-                textScore1.setString(strScore1);
-                ball.setPosition(sf::Vector2f(WINDOW_X / 2, WINDOW_Y / 2));
-                BallSpeed = 400.f;
-            }
-
-            if (ball.getPosition().x < paddle1.getPosition().x - 2*BallRad) {
+            
+            if (ball.getPosition().x < 0) {
                 intScore2++;
                 strScore2 = std::to_string(intScore2);
                 textScore2.setString(strScore2);
-                ball.setPosition(sf::Vector2f(WINDOW_X/2, WINDOW_Y/2));
-                BallSpeed = 400.f;
+                ball.setPosition(WINDOW_X/2, WINDOW_Y/2);
+                velocity.x = initialBallSpeed * std::cos(initialBallAngle);
+                velocity.y = initialBallSpeed * std::sin(initialBallAngle);
+                BallSpeed = initialBallSpeed; 
+            }
+            else if (ball.getPosition().x > WINDOW_X) {
+                intScore1++;
+                strScore1 = std::to_string(intScore1);
+                textScore1.setString(strScore1);
+                ball.setPosition(WINDOW_X/2, WINDOW_Y/2);
+                velocity.x = -initialBallSpeed * std::cos(initialBallAngle);
+                velocity.y = initialBallSpeed * std::sin(initialBallAngle);
+                BallSpeed = initialBallSpeed; 
             }
 
-
-            window.clear(sf::Color::Black);
+            // Отрисовка
             window.draw(paddle1);
             window.draw(paddle2);
             window.draw(ball);
@@ -124,45 +235,135 @@ int main() {
             window.draw(line, 2, sf::Lines);
             window.draw(textScore1);
             window.draw(textScore2);
-            window.display();
-        }
 
-        if (!Playing) {
-            window.clear(sf::Color::Black);
-            menu.draw(window);
-            window.display();
-        }
+        } 
+        else if (gameState == Server) {
+            float deltaTime = clock.restart().asSeconds();
+
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(paddle1.getGlobalBounds().intersects(topBorder.getGlobalBounds())))
+                paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(paddle1.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
+                paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
+
+            // Прием ввода от клиента
+            PlayerInputPacket clientInput;
+            networkManager.receivePlayerInput(clientInput);
+
+            if (clientInput.moveUp && !(paddle2.getGlobalBounds().intersects(topBorder.getGlobalBounds())))
+                paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+            if (clientInput.moveDown && !(paddle2.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
+                paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
 
 
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            switch (event.type) {
-                case sf::Event::Closed:
-                    window.close();
-                    break;
-                    
-                case sf::Event::KeyPressed:
-                    if (event.key.code == sf::Keyboard::Escape) {
-                        Playing = false;
-                    }
-                    break;
-                    
-                default:
-                    if (!Playing) {
-                        menu.handleInput(event);
-                        if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Enter) {
-                            switch (menu.getSelectedItem()) {
-                                case 0: Playing = true; break;
-                                case 1: /* запуск сервера */ break;
-                                case 2: /* запуск клиента */ break;
-                                case 3: window.close(); break;
-                            }
-                        }
-                    }
-                    break;
+            
+            if (ball.getGlobalBounds().intersects(paddle1.getGlobalBounds()) || ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) {
+                velocity.x = -velocity.x * 1.05f;
+                BallSpeed = std::hypot(velocity.x, velocity.y);
+                
+                
+                ball.move(velocity * deltaTime * 2.0f);
             }
+
+
+            
+            if (ball.getGlobalBounds().intersects(topBorder.getGlobalBounds()) || 
+                ball.getGlobalBounds().intersects(botBorder.getGlobalBounds())) {
+                velocity.y = -velocity.y;
+            }
+
+
+            // Проверка на гол
+            if (ball.getPosition().x > WINDOW_X) {
+                intScore1++;
+                strScore1 = std::to_string(intScore1);
+                textScore1.setString(strScore1);
+                ball.setPosition(WINDOW_X/2, WINDOW_Y/2);
+                velocity.x = -initialBallSpeed * std::cos(initialBallAngle);
+                velocity.y = initialBallSpeed * std::sin(initialBallAngle);
+                BallSpeed = initialBallSpeed; 
+            }
+
+            if (ball.getPosition().x < 0) {
+                intScore2++;
+                strScore2 = std::to_string(intScore2);
+                textScore2.setString(strScore2);
+                ball.setPosition(WINDOW_X/2, WINDOW_Y/2);
+                velocity.x = initialBallSpeed * std::cos(initialBallAngle);
+                velocity.y = initialBallSpeed * std::sin(initialBallAngle);
+                BallSpeed = initialBallSpeed;
+            }
+
+             
+            ball.move(velocity * deltaTime);
+
+
+            // Отправка состояния игры клиенту
+            if (networkManager.isConnected() && networkClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
+                GameStatePacket currentState;
+                currentState.ballPos = ball.getPosition();
+                currentState.paddle1Pos = paddle1.getPosition();
+                currentState.paddle2Pos = paddle2.getPosition();
+                currentState.score1 = intScore1;
+                currentState.score2 = intScore2;
+                currentState.ballSpeed = BallSpeed;
+                currentState.ballAngle = BallAngle;
+                networkManager.sendGameState(currentState);
+                networkClock.restart();
+            }
+
+
+            // Отрисовка игры
+            window.draw(paddle1);
+            window.draw(paddle2);
+            window.draw(ball);
+            window.draw(topBorder);
+            window.draw(botBorder);
+            window.draw(line, 2, sf::Lines);
+            window.draw(textScore1);
+            window.draw(textScore2);
+
+        } 
+        else if (gameState == Client) {
+            PlayerInputPacket clientInput;
+            clientInput.moveUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+            clientInput.moveDown = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+            if (networkManager.isConnected()) {
+                 networkManager.sendPlayerInput(clientInput);
+            }
+
+
+            // Прием состояния игры от сервера
+            GameStatePacket serverState;
+            if (networkManager.receiveGameState(serverState)) {
+                ball.setPosition(serverState.ballPos);
+                paddle1.setPosition(serverState.paddle1Pos);
+                paddle2.setPosition(serverState.paddle2Pos);
+                intScore1 = serverState.score1;
+                intScore2 = serverState.score2;
+                strScore1 = std::to_string(intScore1);
+                textScore1.setString(strScore1);
+                strScore2 = std::to_string(intScore2);
+                textScore2.setString(strScore2);
+                BallSpeed = serverState.ballSpeed; 
+                BallAngle = serverState.ballAngle;
+
+            }
+
+            // Отрисовка игры (используем обновленные позиции и счет)
+            window.draw(paddle1);
+            window.draw(paddle2);
+            window.draw(ball);
+            window.draw(topBorder);
+            window.draw(botBorder);
+            window.draw(line, 2, sf::Lines);
+            window.draw(textScore1);
+            window.draw(textScore2);
+
         }
+
+
+        window.display();
     }
-    
+
     return 0;
 }
