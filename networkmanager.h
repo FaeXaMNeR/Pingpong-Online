@@ -99,6 +99,9 @@ class NetworkManager {
         bool isConnected() const {
             return isConnected_;
         }
+        bool hasClient() const {
+            return clientAddress_ != sf::IpAddress::None;
+        }
 
     private:
         sf::UdpSocket socket_;

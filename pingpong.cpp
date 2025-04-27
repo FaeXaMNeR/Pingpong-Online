@@ -78,6 +78,9 @@ int main() {
     sf::Clock networkClock;
 
     // Инициализация скорости мяча при старте
+    float BallSpeed = initialBallSpeed;
+    float BallAngle = initialBallAngle;
+
     velocity.x = BallSpeed * std::cos(BallAngle);
     velocity.y = BallSpeed * std::sin(BallAngle);
 
@@ -116,8 +119,8 @@ int main() {
                                     textScore1.setString(strScore1);
                                     strScore2 = std::to_string(intScore2);
                                     textScore2.setString(strScore2);
-                                    BallSpeed = 400.f;
-                                    BallAngle = 75.f;
+                                    BallSpeed = initialBallSpeed;
+                                    BallAngle = initialBallAngle;
                                     
                                     velocity.x = BallSpeed * std::cos(BallAngle);
                                     velocity.y = BallSpeed * std::sin(BallAngle); 
@@ -136,8 +139,8 @@ int main() {
                                         textScore1.setString(strScore1);
                                         strScore2 = std::to_string(intScore2);
                                         textScore2.setString(strScore2);
-                                        BallSpeed = 400.f;
-                                        BallAngle = 75.f; 
+                                        BallSpeed = initialBallSpeed;
+                                        BallAngle = initialBallAngle;
                                         // Пересчет velocity после сброса скорости и угла
                                         velocity.x = BallSpeed * std::cos(BallAngle); 
                                         velocity.y = BallSpeed * std::sin(BallAngle); 
@@ -175,6 +178,7 @@ int main() {
         if (gameState == MainMenu) {
             menu.draw(window);
         } else if (gameState == OfflineGame) {
+            // На одном экране
             float deltaTime = clock.restart().asSeconds();
 
             ball.move(velocity * deltaTime);
@@ -211,8 +215,8 @@ int main() {
                 intScore2++;
                 strScore2 = std::to_string(intScore2);
                 textScore2.setString(strScore2);
-                ball.setPosition(WINDOW_X/2, WINDOW_Y/2);
-                velocity.x = initialBallSpeed * std::cos(initialBallAngle);
+                ball.setPosition(WINDOW_X - BallRad, WINDOW_Y/2);
+                velocity.x = -initialBallSpeed * std::cos(initialBallAngle);
                 velocity.y = initialBallSpeed * std::sin(initialBallAngle);
                 BallSpeed = initialBallSpeed; 
             }
@@ -220,8 +224,8 @@ int main() {
                 intScore1++;
                 strScore1 = std::to_string(intScore1);
                 textScore1.setString(strScore1);
-                ball.setPosition(WINDOW_X/2, WINDOW_Y/2);
-                velocity.x = -initialBallSpeed * std::cos(initialBallAngle);
+                ball.setPosition(BallRad, WINDOW_Y/2);
+                velocity.x = initialBallSpeed * std::cos(initialBallAngle);
                 velocity.y = initialBallSpeed * std::sin(initialBallAngle);
                 BallSpeed = initialBallSpeed; 
             }
@@ -255,61 +259,62 @@ int main() {
                 paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
 
 
-            
-            if (ball.getGlobalBounds().intersects(paddle1.getGlobalBounds()) || ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) {
-                velocity.x = -velocity.x * 1.05f;
-                BallSpeed = std::hypot(velocity.x, velocity.y);
+            if (networkManager.hasClient()) {
+                if (ball.getGlobalBounds().intersects(paddle1.getGlobalBounds()) || ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) {
+                    velocity.x = -velocity.x * 1.05f;
+                    BallSpeed = std::hypot(velocity.x, velocity.y);
+                    
+                    
+                    ball.move(velocity * deltaTime * 2.0f);
+                }
+
+
                 
-                
-                ball.move(velocity * deltaTime * 2.0f);
+                if (ball.getGlobalBounds().intersects(topBorder.getGlobalBounds()) || 
+                    ball.getGlobalBounds().intersects(botBorder.getGlobalBounds())) {
+                    velocity.y = -velocity.y;
+                }
+
+
+                // Проверка на гол
+                if (ball.getPosition().x > WINDOW_X) {
+                    intScore1++;
+                    strScore1 = std::to_string(intScore1);
+                    textScore1.setString(strScore1);
+                    ball.setPosition(0, WINDOW_Y/2);
+                    velocity.x = initialBallSpeed * std::cos(initialBallAngle);
+                    velocity.y = initialBallSpeed * std::sin(initialBallAngle);
+                    BallSpeed = initialBallSpeed; 
+                }
+
+                if (ball.getPosition().x < 0) {
+                    intScore2++;
+                    strScore2 = std::to_string(intScore2);
+                    textScore2.setString(strScore2);
+                    ball.setPosition(WINDOW_X, WINDOW_Y/2);
+                    velocity.x = -initialBallSpeed * std::cos(initialBallAngle);
+                    velocity.y = initialBallSpeed * std::sin(initialBallAngle);
+                    BallSpeed = initialBallSpeed;
+                }
+
+
+                // Отправка состояния игры клиенту
+                if (networkManager.isConnected() && networkClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
+                    GameStatePacket currentState;
+                    currentState.ballPos = ball.getPosition();
+                    currentState.paddle1Pos = paddle1.getPosition();
+                    currentState.paddle2Pos = paddle2.getPosition();
+                    currentState.score1 = intScore1;
+                    currentState.score2 = intScore2;
+                    currentState.ballSpeed = BallSpeed;
+                    currentState.ballAngle = BallAngle;
+                    networkManager.sendGameState(currentState);
+                    networkClock.restart();
+                }
+
+                ball.move(velocity * deltaTime);
             }
 
-
-            
-            if (ball.getGlobalBounds().intersects(topBorder.getGlobalBounds()) || 
-                ball.getGlobalBounds().intersects(botBorder.getGlobalBounds())) {
-                velocity.y = -velocity.y;
-            }
-
-
-            // Проверка на гол
-            if (ball.getPosition().x > WINDOW_X) {
-                intScore1++;
-                strScore1 = std::to_string(intScore1);
-                textScore1.setString(strScore1);
-                ball.setPosition(WINDOW_X/2, WINDOW_Y/2);
-                velocity.x = -initialBallSpeed * std::cos(initialBallAngle);
-                velocity.y = initialBallSpeed * std::sin(initialBallAngle);
-                BallSpeed = initialBallSpeed; 
-            }
-
-            if (ball.getPosition().x < 0) {
-                intScore2++;
-                strScore2 = std::to_string(intScore2);
-                textScore2.setString(strScore2);
-                ball.setPosition(WINDOW_X/2, WINDOW_Y/2);
-                velocity.x = initialBallSpeed * std::cos(initialBallAngle);
-                velocity.y = initialBallSpeed * std::sin(initialBallAngle);
-                BallSpeed = initialBallSpeed;
-            }
-
-             
-            ball.move(velocity * deltaTime);
-
-
-            // Отправка состояния игры клиенту
-            if (networkManager.isConnected() && networkClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
-                GameStatePacket currentState;
-                currentState.ballPos = ball.getPosition();
-                currentState.paddle1Pos = paddle1.getPosition();
-                currentState.paddle2Pos = paddle2.getPosition();
-                currentState.score1 = intScore1;
-                currentState.score2 = intScore2;
-                currentState.ballSpeed = BallSpeed;
-                currentState.ballAngle = BallAngle;
-                networkManager.sendGameState(currentState);
-                networkClock.restart();
-            }
 
 
             // Отрисовка игры
