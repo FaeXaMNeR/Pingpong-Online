@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
+#include <string>
 #include <sstream>
 #include <cmath>
 
@@ -152,7 +153,13 @@ int main() {
                                     break;
                                 case 2: // Join Server
                                     {
-                                        sf::IpAddress serverAddress = "192.168.0.100";
+                                        sf::IpAddress serverAddress;
+                                        std::string ipString;
+
+                                        std::cout << "Enter server IP address:\n";
+                                        std::cin >> ipString;
+
+                                        serverAddress = sf::IpAddress(ipString);
 
                                         if (networkManager.connectClient(serverAddress, PORT)) {
                                             gameState = Client;
