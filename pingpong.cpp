@@ -339,39 +339,42 @@ int main() {
             PlayerInputPacket clientInput;
             clientInput.moveUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
             clientInput.moveDown = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+
+            if (clientInput.moveUp && !(paddle2.getGlobalBounds().intersects(topBorder.getGlobalBounds())))
+                paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+            if (clientInput.moveDown && !(paddle2.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
+                paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
+
             if (networkManager.isConnected()) {
                  networkManager.sendPlayerInput(clientInput);
             }
 
-
-            // Прием состояния игры от сервера
             GameStatePacket serverState;
             if (networkManager.receiveGameState(serverState)) {
                 ball.setPosition(serverState.ballPos);
                 paddle1.setPosition(serverState.paddle1Pos);
-                paddle2.setPosition(serverState.paddle2Pos);
+                paddle2.setPosition(serverState.paddle2Pos); // Эту строку можно оставить для простой коррекции позиции
+
                 intScore1 = serverState.score1;
                 intScore2 = serverState.score2;
                 strScore1 = std::to_string(intScore1);
                 textScore1.setString(strScore1);
                 strScore2 = std::to_string(intScore2);
                 textScore2.setString(strScore2);
-                BallSpeed = serverState.ballSpeed; 
+                BallSpeed = serverState.ballSpeed;
                 BallAngle = serverState.ballAngle;
-
             }
 
-            // Отрисовка игры (используем обновленные позиции и счет)
             window.draw(paddle1);
-            window.draw(paddle2);
+            window.draw(paddle2); 
             window.draw(ball);
             window.draw(topBorder);
             window.draw(botBorder);
             window.draw(line, 2, sf::Lines);
             window.draw(textScore1);
             window.draw(textScore2);
-
         }
+
 
 
         window.display();
