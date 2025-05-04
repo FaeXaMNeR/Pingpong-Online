@@ -36,9 +36,6 @@ int main() {
     paddle2.setFillColor(sf::Color::White);
     paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
 
-    sf::Vector2f targetPaddle2Pos;
-    bool needsReconciliation = false;
-
     sf::RectangleShape topBorder;
     topBorder.setSize(sf::Vector2f(WINDOW_X,PaddleSize.x));
     topBorder.setPosition(0, 0);
@@ -80,6 +77,7 @@ int main() {
     GameState gameState = MainMenu;
     NetworkManager networkManager;
     sf::Clock networkClock;
+    sf::Clock clientInputClock;
 
     // Инициализация скорости мяча при старте
     float BallSpeed = initialBallSpeed;
@@ -339,27 +337,20 @@ int main() {
 
         } 
         else if (gameState == Client) {
-            float deltaTime = clock.restart().asSeconds();
-
-            PlayerInputPacket clientInput;
-            clientInput.moveUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
-            clientInput.moveDown = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
-
-            if (networkManager.isConnected()) {
-                 networkManager.sendPlayerInput(clientInput);
+            if (networkManager.isConnected() && clientInputClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
+                PlayerInputPacket clientInput;
+                clientInput.moveUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+                clientInput.moveDown = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+                networkManager.sendPlayerInput(clientInput);
+                clientInputClock.restart();
             }
-
-    
-            if (clientInput.moveUp && !(paddle2.getGlobalBounds().intersects(topBorder.getGlobalBounds())))
-                paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if (clientInput.moveDown && !(paddle2.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
-                paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
 
             // Прием состояния игры от сервера
             GameStatePacket serverState;
             if (networkManager.receiveGameState(serverState)) {
                 ball.setPosition(serverState.ballPos);
                 paddle1.setPosition(serverState.paddle1Pos);
+                paddle2.setPosition(serverState.paddle2Pos);
 
                 intScore1 = serverState.score1;
                 intScore2 = serverState.score2;
@@ -367,31 +358,9 @@ int main() {
                 textScore1.setString(strScore1);
                 strScore2 = std::to_string(intScore2);
                 textScore2.setString(strScore2);
+
                 BallSpeed = serverState.ballSpeed;
                 BallAngle = serverState.ballAngle;
-
-                targetPaddle2Pos = serverState.paddle2Pos;
-                needsReconciliation = true;
-            }
-
-        
-            if (needsReconciliation) {
-                float interpolationFactor = 5.0f * deltaTime; // Значение 5.0 - пример, можно подобрать
-
-                if (interpolationFactor > 1.0f) {
-                    interpolationFactor = 1.0f;
-                }
-
-                
-                float newPaddle2Y = paddle2.getPosition().y + (targetPaddle2Pos.y - paddle2.getPosition().y) * interpolationFactor;
-
-                // Устанавливаем новую позицию
-                paddle2.setPosition(paddle2.getPosition().x, newPaddle2Y);
-
-                
-                if (std::abs(targetPaddle2Pos.y - paddle2.getPosition().y) < 1.0f) {
-                    needsReconciliation = false;
-                }
             }
 
             // Отрисовка игры
