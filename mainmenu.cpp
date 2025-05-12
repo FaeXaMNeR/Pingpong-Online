@@ -1,6 +1,6 @@
 #include <SFML/Network.hpp>
 
-#include "mainmenu.h"
+#include "mainmenu.hpp"
 
 Menu::Menu(float width, float height) {
     font.loadFromFile("pong.ttf");
@@ -12,16 +12,16 @@ Menu::Menu(float width, float height) {
     }
 
     menu[0].setString("Play Offline");
-    menu[0].setPosition(sf::Vector2f(width/2 - 160, height/(MAX_NUMBER_ITEMS+1)*1));
+    menu[0].setPosition(sf::Vector2f(width / 10, height/(MAX_NUMBER_ITEMS+1)*1));
 
     menu[1].setString("Launch Server");
-    menu[1].setPosition(sf::Vector2f(width/2 - 120, height/(MAX_NUMBER_ITEMS+1)*2));
+    menu[1].setPosition(sf::Vector2f(width / 10, height/(MAX_NUMBER_ITEMS+1)*2));
 
     menu[2].setString("Join Server");
-    menu[2].setPosition(sf::Vector2f(width/2 - 80, height/(MAX_NUMBER_ITEMS+1)*3));
+    menu[2].setPosition(sf::Vector2f(width / 10, height/(MAX_NUMBER_ITEMS+1)*3));
 
     menu[3].setString("Exit");
-    menu[3].setPosition(sf::Vector2f(width/2 - 40, height/(MAX_NUMBER_ITEMS+1)*4));
+    menu[3].setPosition(sf::Vector2f(width / 10, height/(MAX_NUMBER_ITEMS+1)*4));
 
     menu[0].setFillColor(sf::Color::White); // Выбранный пункт по умолчанию
     selectedItemIndex = 0;

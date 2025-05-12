@@ -7,9 +7,9 @@
 #include <sstream>
 #include <cmath>
 
-#include "mainmenu.h"
-#include "constants.h"
-#include "networkmanager.h"
+#include "mainmenu.hpp"
+#include "constants.hpp"
+#include "networkmanager.hpp"
 
 // Определение состояний игры (для управления режимами: меню, офлайн, сервер, клиент)
 enum GameState {
@@ -45,7 +45,7 @@ int main() {
     botBorder.setPosition(0, WINDOW_Y-PaddleSize.x);
 
     sf::Font font;
-    font.loadFromFile("digit.ttf");
+    font.loadFromFile("pong.ttf");
 
     int intScore1 = 0;
     sf::Text textScore1;
