@@ -29,7 +29,6 @@ int main() {
     paddle1.setSize(PaddleSize);
     paddle1.setFillColor(sf::Color::White);
     paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
-    paddle1.setOrigin(sf::Vector2f(paddle1.getSize().x / 2, paddle1.getSize().y / 2));
 
     sf::RectangleShape paddle2;
     paddle2.setSize(PaddleSize);
@@ -134,7 +133,6 @@ int main() {
                                         textScore1.setString(strScore1);
                                         strScore2 = std::to_string(intScore2);
                                         textScore2.setString(strScore2);
-
                                         velocity = initialVelocity;
 
                                         clock.restart();

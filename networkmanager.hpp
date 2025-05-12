@@ -7,7 +7,11 @@
 
 enum PacketType {
     GameStateUpdate,
-    PlayerInput
+    PlayerInput,
+    ConnectionRequest,
+    ConnectionAccept,
+    GameStart,
+    PlayerDisconnect
 };
 
 struct GameStatePacket {
@@ -24,6 +28,16 @@ struct PlayerInputPacket {
     PacketType type = PlayerInput;
     bool moveUp;
     bool moveDown;
+};
+
+struct ConnectionPacket {
+    PacketType type = ConnectionRequest;
+    std::string playerName;
+};
+
+struct GameStartPacket {
+    PacketType type = GameStart;
+    int assignedPlayerId;
 };
 
 inline sf::Packet &operator >> (sf::Packet &packet, PacketType &type) {
@@ -113,4 +127,13 @@ class NetworkManager {
         bool isServer_ = false;
         bool isClient_ = false;
         bool isConnected_ = false;
+
+        struct ClientInfo {
+            sf::IpAddress address;
+            unsigned short port;
+            bool isReady;
+            int playerId;
+        };
+
+        std::vector<ClientInfo> clients;
 };
