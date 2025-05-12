@@ -17,8 +17,7 @@ struct GameStatePacket {
     sf::Vector2f paddle2Pos;
     int score1;
     int score2;
-    float ballSpeed;
-    float ballAngle;
+    sf::Vector2f velocity;
 };
 
 struct PlayerInputPacket {
@@ -46,7 +45,7 @@ inline sf::Packet &operator << (sf::Packet &packet, const GameStatePacket &state
                   << state.paddle1Pos.x << state.paddle1Pos.y
                   << state.paddle2Pos.x << state.paddle2Pos.y
                   << state.score1 << state.score2
-                  << state.ballSpeed << state.ballAngle; 
+                  << state.velocity.x << state.velocity.y; 
 }
 
 inline sf::Packet &operator >> (sf::Packet &packet, GameStatePacket &state) {
@@ -56,7 +55,7 @@ inline sf::Packet &operator >> (sf::Packet &packet, GameStatePacket &state) {
                >> state.paddle1Pos.x >> state.paddle1Pos.y
                >> state.paddle2Pos.x >> state.paddle2Pos.y
                >> state.score1 >> state.score2
-               >> state.ballSpeed >> state.ballAngle;
+               >> state.velocity.x << state.velocity.y;
     }
 
     return packet;

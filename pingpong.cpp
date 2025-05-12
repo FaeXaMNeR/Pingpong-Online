@@ -80,11 +80,7 @@ int main() {
     sf::Clock clientInputClock;
 
     // Инициализация скорости мяча при старте
-    float BallSpeed = initialBallSpeed;
-    float BallAngle = initialBallAngle;
-
-    velocity.x = BallSpeed * std::cos(BallAngle);
-    velocity.y = BallSpeed * std::sin(BallAngle);
+    velocity = initialVelocity;
 
 
     while (window.isOpen()) {
@@ -121,11 +117,8 @@ int main() {
                                     textScore1.setString(strScore1);
                                     strScore2 = std::to_string(intScore2);
                                     textScore2.setString(strScore2);
-                                    BallSpeed = initialBallSpeed;
-                                    BallAngle = initialBallAngle;
-                                    
-                                    velocity.x = BallSpeed * std::cos(BallAngle);
-                                    velocity.y = BallSpeed * std::sin(BallAngle); 
+                                    velocity = initialVelocity;
+
                                     clock.restart();
                                     break;
                                 case 1: // Launch Server
@@ -141,11 +134,9 @@ int main() {
                                         textScore1.setString(strScore1);
                                         strScore2 = std::to_string(intScore2);
                                         textScore2.setString(strScore2);
-                                        BallSpeed = initialBallSpeed;
-                                        BallAngle = initialBallAngle;
-                                        // Пересчет velocity после сброса скорости и угла
-                                        velocity.x = BallSpeed * std::cos(BallAngle); 
-                                        velocity.y = BallSpeed * std::sin(BallAngle); 
+
+                                        velocity = initialVelocity;
+
                                         clock.restart();
                                         networkClock.restart();
                                     } else {
@@ -195,8 +186,6 @@ int main() {
                 ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) 
             {
                 velocity.x = -velocity.x * 1.05f;
-                BallSpeed = std::hypot(velocity.x, velocity.y);
-                
                 ball.move(velocity * deltaTime * 2.0f);
             }
 
@@ -224,18 +213,15 @@ int main() {
                 strScore2 = std::to_string(intScore2);
                 textScore2.setString(strScore2);
                 ball.setPosition(WINDOW_X - BallRad, WINDOW_Y/2);
-                velocity.x = -initialBallSpeed * std::cos(initialBallAngle);
-                velocity.y = initialBallSpeed * std::sin(initialBallAngle);
-                BallSpeed = initialBallSpeed; 
+                velocity.x = -initialVelocity.x;
+                velocity.y = initialVelocity.y;
             }
             else if (ball.getPosition().x > WINDOW_X) {
                 intScore1++;
                 strScore1 = std::to_string(intScore1);
                 textScore1.setString(strScore1);
                 ball.setPosition(BallRad, WINDOW_Y/2);
-                velocity.x = initialBallSpeed * std::cos(initialBallAngle);
-                velocity.y = initialBallSpeed * std::sin(initialBallAngle);
-                BallSpeed = initialBallSpeed; 
+                velocity = initialVelocity;
             }
 
             // Отрисовка
@@ -269,9 +255,7 @@ int main() {
 
             if (networkManager.hasClient()) {
                 if (ball.getGlobalBounds().intersects(paddle1.getGlobalBounds()) || ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) {
-                    velocity.x = -velocity.x * 1.05f;
-                    BallSpeed = std::hypot(velocity.x, velocity.y);
-                    
+                    velocity.x = -velocity.x * 1.05f;                  
                     
                     ball.move(velocity * deltaTime * 2.0f);
                 }
@@ -290,9 +274,7 @@ int main() {
                     strScore1 = std::to_string(intScore1);
                     textScore1.setString(strScore1);
                     ball.setPosition(0, WINDOW_Y/2);
-                    velocity.x = initialBallSpeed * std::cos(initialBallAngle);
-                    velocity.y = initialBallSpeed * std::sin(initialBallAngle);
-                    BallSpeed = initialBallSpeed; 
+                    velocity = initialVelocity;
                 }
 
                 if (ball.getPosition().x < 0) {
@@ -300,9 +282,8 @@ int main() {
                     strScore2 = std::to_string(intScore2);
                     textScore2.setString(strScore2);
                     ball.setPosition(WINDOW_X, WINDOW_Y/2);
-                    velocity.x = -initialBallSpeed * std::cos(initialBallAngle);
-                    velocity.y = initialBallSpeed * std::sin(initialBallAngle);
-                    BallSpeed = initialBallSpeed;
+                    velocity.x = -initialVelocity.x;
+                    velocity.y = initialVelocity.y;
                 }
 
 
@@ -314,8 +295,7 @@ int main() {
                     currentState.paddle2Pos = paddle2.getPosition();
                     currentState.score1 = intScore1;
                     currentState.score2 = intScore2;
-                    currentState.ballSpeed = BallSpeed;
-                    currentState.ballAngle = BallAngle;
+                    currentState.velocity = velocity;
                     networkManager.sendGameState(currentState);
                     networkClock.restart();
                 }
@@ -359,8 +339,7 @@ int main() {
                 strScore2 = std::to_string(intScore2);
                 textScore2.setString(strScore2);
 
-                BallSpeed = serverState.ballSpeed;
-                BallAngle = serverState.ballAngle;
+                velocity = serverState.velocity;
             }
 
             // Отрисовка игры
@@ -373,9 +352,6 @@ int main() {
             window.draw(textScore1);
             window.draw(textScore2);
         }
-
-
-
 
         window.display();
     }
