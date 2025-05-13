@@ -12,7 +12,7 @@
 #include "networkmanager.hpp"
 
 // Определение состояний игры (для управления режимами: меню, офлайн, сервер, клиент)
-enum GameState {
+enum GameMode {
     MainMenu,
     OfflineGame,
     Server,
@@ -73,7 +73,7 @@ int main() {
     ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
 
     sf::Clock clock;
-    GameState gameState = MainMenu;
+    GameMode gameMode = MainMenu;
     NetworkManager networkManager;
     sf::Clock networkClock;
     sf::Clock clientInputClock;
@@ -92,20 +92,20 @@ int main() {
 
                 case sf::Event::KeyPressed:
                     if (event.key.code == sf::Keyboard::Escape) {
-                        if (gameState != MainMenu) {
-                            gameState = MainMenu;
+                        if (gameMode != MainMenu) {
+                            gameMode = MainMenu;
                             networkManager.disconnect();
                         }
                     }
                     break;
 
                 default:
-                    if (gameState == MainMenu) {
+                    if (gameMode == MainMenu) {
                         menu.handleInput(event);
                         if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Enter) {
                             switch (menu.getSelectedItem()) {
                                 case 0: // Play Offline
-                                    gameState = OfflineGame;
+                                    gameMode = OfflineGame;
                                     // Сброс состояния игры для новой офлайн-игры
                                     ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
                                     paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
@@ -122,7 +122,7 @@ int main() {
                                     break;
                                 case 1: // Launch Server
                                     if (networkManager.startServer(PORT)) {
-                                        gameState = Server;
+                                        gameMode = Server;
                                          // Сброс состояния игры для новой сетевой игры
                                         ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
                                         paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
@@ -152,7 +152,7 @@ int main() {
                                         serverAddress = sf::IpAddress(ipString);
 
                                         if (networkManager.connectClient(serverAddress, PORT)) {
-                                            gameState = Client;
+                                            gameMode = Client;
                                             clock.restart();
                                             networkClock.restart();
                                         } else {
@@ -172,9 +172,9 @@ int main() {
 
         window.clear(sf::Color::Black);
 
-        if (gameState == MainMenu) {
+        if (gameMode == MainMenu) {
             menu.draw(window);
-        } else if (gameState == OfflineGame) {
+        } else if (gameMode == OfflineGame) {
             // На одном экране
             float deltaTime = clock.restart().asSeconds();
 
@@ -233,7 +233,7 @@ int main() {
             window.draw(textScore2);
 
         } 
-        else if (gameState == Server) {
+        else if (gameMode == Server) {
             float deltaTime = clock.restart().asSeconds();
 
             if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(paddle1.getGlobalBounds().intersects(topBorder.getGlobalBounds())))
@@ -314,7 +314,7 @@ int main() {
             window.draw(textScore2);
 
         } 
-        else if (gameState == Client) {
+        else if (gameMode == Client) {
             if (networkManager.isConnected() && clientInputClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
                 PlayerInputPacket clientInput;
                 clientInput.moveUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);

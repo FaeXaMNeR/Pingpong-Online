@@ -128,12 +128,13 @@ class NetworkManager {
         bool isClient_ = false;
         bool isConnected_ = false;
 
-        struct ClientInfo {
+        struct PlayerInfo {
             sf::IpAddress address;
             unsigned short port;
             bool isReady;
             int playerId;
+            char playerName[4];
         };
 
-        std::vector<ClientInfo> clients;
+        std::vector<PlayerInfo> players;
 };

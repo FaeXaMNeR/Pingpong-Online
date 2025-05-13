@@ -19,10 +19,11 @@ bool NetworkManager::startServer(unsigned short port) {
     isServer_ = true;
     isConnected_ = true;
 
-    clientAddress_ = sf::IpAddress::None;
-    clientPort_ = 0;
+    PlayerInfo host = {sf::IpAddress::getLocalAddress(), port, true, 0, "HST"};
+    players.push_back(host);
 
     std::cout << "Server started on port " << port << std::endl;
+    std::cout << "Your local IP address is " << host.address << std::endl;
 
     return true;
 }
