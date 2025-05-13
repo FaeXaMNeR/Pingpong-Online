@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <cassert>
 
 #include "mainmenu.hpp"
 #include "constants.hpp"
@@ -35,6 +36,48 @@ public:
     sf::CircleShape ball;
     sf::Vector2f velocity;
 
+    void setTheGame() {
+        paddle1.setSize(PaddleSize);
+        paddle1.setFillColor(sf::Color::White);
+        paddle1.setPosition(PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y);
+
+        paddle2.setSize(PaddleSize);
+        paddle2.setFillColor(sf::Color::White);
+        paddle2.setPosition(WINDOW_X - 2 * PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y);
+
+        topBorder.setSize(sf::Vector2f(WINDOW_X, WINDOW_Y / 90));
+        topBorder.setPosition(0, 0);
+
+        botBorder.setSize(sf::Vector2f(WINDOW_X, WINDOW_Y / 90));
+        botBorder.setPosition(0, WINDOW_Y * 89 / 90);
+
+        textScore1.setCharacterSize(WINDOW_Y / 10);
+        textScore1.setPosition(sf::Vector2f(WINDOW_X / 5, 0));
+
+        textScore2.setCharacterSize(WINDOW_Y / 10);
+        textScore2.setPosition(sf::Vector2f(WINDOW_X * 4 / 5, 0));
+
+        convertScoreToText();
+
+        line[0] = sf::Vertex(sf::Vector2f(WINDOW_X / 2 /*+ 1*/, 0));
+        line[1] = sf::Vertex(sf::Vector2f(WINDOW_X / 2 /*+ 1*/, WINDOW_Y));
+
+        ball.setRadius(BallRad);
+        ball.setPointCount(10);
+        ball.setFillColor(sf::Color::White);
+        ball.setPosition(sf::Vector2f(WINDOW_X / 2, WINDOW_Y / 2));
+
+        velocity = initialVelocity;
+    };
+
+    void convertScoreToText() {
+        strScore1 = std::to_string(intScore1);
+        textScore1.setString(strScore1);
+
+        strScore2 = std::to_string(intScore2);
+        textScore2.setString(strScore2);
+    };
+    
     void reset() {
         ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
         paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
@@ -68,52 +111,18 @@ int main() {
 
     PongState pongState;
 
-    pongState.paddle1.setSize(PaddleSize);
-    pongState.paddle1.setFillColor(sf::Color::White);
-    pongState.paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
-
-    pongState.paddle2.setSize(PaddleSize);
-    pongState.paddle2.setFillColor(sf::Color::White);
-    pongState.paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
-
-    pongState.topBorder.setSize(sf::Vector2f(WINDOW_X,PaddleSize.x));
-    pongState.topBorder.setPosition(0, 0);
-
-    pongState.botBorder.setSize(sf::Vector2f(WINDOW_X, PaddleSize.x));
-    pongState.botBorder.setPosition(0, WINDOW_Y-PaddleSize.x);
-
     sf::Font font;
     font.loadFromFile("pong.ttf");
-
-    pongState.strScore1 = std::to_string(pongState.intScore1);
-    pongState.textScore1.setString(pongState.strScore1);
     pongState.textScore1.setFont(font);
-    pongState.textScore1.setCharacterSize(WINDOW_Y / 10);
-    pongState.textScore1.setPosition(sf::Vector2f(WINDOW_X/5.f, 0.f));
-
-    pongState.strScore2 = std::to_string(pongState.intScore2);
-    pongState.textScore2.setString(pongState.strScore2);
     pongState.textScore2.setFont(font);
-    pongState.textScore2.setCharacterSize(WINDOW_Y / 10);
-    pongState.textScore2.setPosition(sf::Vector2f(WINDOW_X/5.f*4.f, 0.f));
 
-    pongState.line[0] = sf::Vertex(sf::Vector2f(WINDOW_X/2+1,0));
-    pongState.line[1] = sf::Vertex(sf::Vector2f(WINDOW_X/2+1,WINDOW_Y));
-
-    pongState.ball.setRadius(BallRad);
-    pongState.ball.setPointCount(10);
-    pongState.ball.setFillColor(sf::Color::White);
-    pongState.ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
+    pongState.setTheGame();
 
     sf::Clock clock;
     GameMode gameMode = MainMenu;
     NetworkManager networkManager;
     sf::Clock networkClock;
     sf::Clock clientInputClock;
-
-    // Инициализация скорости мяча при старте
-    pongState.velocity = initialVelocity;
-
 
     while (window.isOpen()) {
         sf::Event event;
@@ -225,7 +234,7 @@ int main() {
                 pongState.intScore2++;
                 pongState.strScore2 = std::to_string(pongState.intScore2);
                 pongState.textScore2.setString(pongState.strScore2);
-                pongState.ball.setPosition(WINDOW_X - BallRad, WINDOW_Y/2);
+                pongState.ball.setPosition(WINDOW_X - BallRad - 2*PaddleSize.x, WINDOW_Y/2);
                 pongState.velocity.x = -initialVelocity.x;
                 pongState.velocity.y = initialVelocity.y;
             }
@@ -233,7 +242,7 @@ int main() {
                 pongState.intScore1++;
                 pongState.strScore1 = std::to_string(pongState.intScore1);
                 pongState.textScore1.setString(pongState.strScore1);
-                pongState.ball.setPosition(BallRad, WINDOW_Y/2);
+                pongState.ball.setPosition(BallRad + 2*PaddleSize.x, WINDOW_Y/2);
                 pongState.velocity = initialVelocity;
             }
 

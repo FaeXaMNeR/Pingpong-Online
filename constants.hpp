@@ -5,8 +5,8 @@
 const int WINDOW_X = 1600;
 const int WINDOW_Y = 900;
 
-const int BallRad = 6;
-sf::Vector2f PaddleSize(10, 60);
+const int BallRad = WINDOW_Y * 2 / 300;
+sf::Vector2f PaddleSize(WINDOW_X / 160, WINDOW_Y * 2 / 30);
 
 sf::Vector2f initialVelocity(507.f, -213.3f);
 
