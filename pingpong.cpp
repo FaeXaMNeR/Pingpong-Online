@@ -38,29 +38,32 @@ public:
 
     void setTheGame() {
         paddle1.setSize(PaddleSize);
-        paddle1.setFillColor(sf::Color::White);
-        paddle1.setPosition(PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y);
-
         paddle2.setSize(PaddleSize);
+
+        paddle1.setFillColor(sf::Color::White);
         paddle2.setFillColor(sf::Color::White);
-        paddle2.setPosition(WINDOW_X - 2 * PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y);
+
+        paddle1.setPosition(               PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y / 2);
+        paddle2.setPosition(WINDOW_X - 2 * PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y / 2);
+
 
         topBorder.setSize(sf::Vector2f(WINDOW_X, WINDOW_Y / 90));
-        topBorder.setPosition(0, 0);
-
         botBorder.setSize(sf::Vector2f(WINDOW_X, WINDOW_Y / 90));
+        
+        topBorder.setPosition(0, 0);
         botBorder.setPosition(0, WINDOW_Y * 89 / 90);
 
+        
         textScore1.setCharacterSize(WINDOW_Y / 10);
-        textScore1.setPosition(sf::Vector2f(WINDOW_X / 5, 0));
-
         textScore2.setCharacterSize(WINDOW_Y / 10);
+
+        textScore1.setPosition(sf::Vector2f(WINDOW_X * 1 / 5, 0));
         textScore2.setPosition(sf::Vector2f(WINDOW_X * 4 / 5, 0));
 
         convertScoreToText();
 
-        line[0] = sf::Vertex(sf::Vector2f(WINDOW_X / 2 /*+ 1*/, 0));
-        line[1] = sf::Vertex(sf::Vector2f(WINDOW_X / 2 /*+ 1*/, WINDOW_Y));
+        line[0] = sf::Vertex(sf::Vector2f(WINDOW_X / 2, 0));
+        line[1] = sf::Vertex(sf::Vector2f(WINDOW_X / 2, WINDOW_Y));
 
         ball.setRadius(BallRad);
         ball.setPointCount(10);
@@ -80,8 +83,8 @@ public:
     
     void reset() {
         ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
-        paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
-        paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
+        paddle1.setPosition(               PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y / 2);
+        paddle2.setPosition(WINDOW_X - 2 * PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y / 2);
         intScore1 = 0;
         intScore2 = 0;
         strScore1 = std::to_string(intScore1);
