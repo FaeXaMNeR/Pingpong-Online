@@ -19,58 +19,91 @@ enum GameMode {
     Client
 };
 
+class PongState {
+public:
+    sf::RectangleShape paddle1;
+    sf::RectangleShape paddle2;
+    sf::RectangleShape topBorder;
+    sf::RectangleShape botBorder;
+    sf::Vertex line[2];
+    int intScore1 = 0;
+    int intScore2 = 0; 
+    std::string strScore1;
+    std::string strScore2;
+    sf::Text textScore1;
+    sf::Text textScore2;   
+    sf::CircleShape ball;
+    sf::Vector2f velocity;
+
+    void reset() {
+        ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
+        paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
+        paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
+        intScore1 = 0;
+        intScore2 = 0;
+        strScore1 = std::to_string(intScore1);
+        textScore1.setString(strScore1);
+        strScore2 = std::to_string(intScore2);
+        textScore2.setString(strScore2);
+        velocity = initialVelocity;
+    };
+
+    void draw(sf::RenderWindow * window) {
+        window->draw(paddle1);
+        window->draw(paddle2);
+        window->draw(ball);
+        window->draw(topBorder);
+        window->draw(botBorder);
+        window->draw(line, 2, sf::Lines);
+        window->draw(textScore1);
+        window->draw(textScore2);
+    };
+};
+
 int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_X, WINDOW_Y), "PingPong", sf::Style::Titlebar | sf::Style::Close);
     Menu menu(window.getSize().x, window.getSize().y);
 
     window.setVerticalSyncEnabled(true);
 
-    sf::RectangleShape paddle1;
-    paddle1.setSize(PaddleSize);
-    paddle1.setFillColor(sf::Color::White);
-    paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
+    PongState pongState;
 
-    sf::RectangleShape paddle2;
-    paddle2.setSize(PaddleSize);
-    paddle2.setFillColor(sf::Color::White);
-    paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
+    pongState.paddle1.setSize(PaddleSize);
+    pongState.paddle1.setFillColor(sf::Color::White);
+    pongState.paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
 
-    sf::RectangleShape topBorder;
-    topBorder.setSize(sf::Vector2f(WINDOW_X,PaddleSize.x));
-    topBorder.setPosition(0, 0);
+    pongState.paddle2.setSize(PaddleSize);
+    pongState.paddle2.setFillColor(sf::Color::White);
+    pongState.paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
 
-    sf::RectangleShape botBorder;
-    botBorder.setSize(sf::Vector2f(WINDOW_X, PaddleSize.x));
-    botBorder.setPosition(0, WINDOW_Y-PaddleSize.x);
+    pongState.topBorder.setSize(sf::Vector2f(WINDOW_X,PaddleSize.x));
+    pongState.topBorder.setPosition(0, 0);
+
+    pongState.botBorder.setSize(sf::Vector2f(WINDOW_X, PaddleSize.x));
+    pongState.botBorder.setPosition(0, WINDOW_Y-PaddleSize.x);
 
     sf::Font font;
     font.loadFromFile("pong.ttf");
 
-    int intScore1 = 0;
-    sf::Text textScore1;
-    std::string strScore1 = std::to_string(intScore1);
-    textScore1.setString(strScore1);
-    textScore1.setFont(font);
-    textScore1.setCharacterSize(PaddleSize.y*1.5f);
-    textScore1.setPosition(sf::Vector2f(WINDOW_X/5.f, 0.f));
+    pongState.strScore1 = std::to_string(pongState.intScore1);
+    pongState.textScore1.setString(pongState.strScore1);
+    pongState.textScore1.setFont(font);
+    pongState.textScore1.setCharacterSize(WINDOW_Y / 10);
+    pongState.textScore1.setPosition(sf::Vector2f(WINDOW_X/5.f, 0.f));
 
-    int intScore2 = 0;
-    sf::Text textScore2;
-    std::string strScore2 = std::to_string(intScore2);
-    textScore2.setString(strScore2);
-    textScore2.setFont(font);
-    textScore2.setCharacterSize(PaddleSize.y*1.5f);
-    textScore2.setPosition(sf::Vector2f(WINDOW_X/5.f*4.f, 0.f));
+    pongState.strScore2 = std::to_string(pongState.intScore2);
+    pongState.textScore2.setString(pongState.strScore2);
+    pongState.textScore2.setFont(font);
+    pongState.textScore2.setCharacterSize(WINDOW_Y / 10);
+    pongState.textScore2.setPosition(sf::Vector2f(WINDOW_X/5.f*4.f, 0.f));
 
-    sf::Vertex line[] = {
-        sf::Vertex(sf::Vector2f(WINDOW_X/2+1,0)),
-        sf::Vertex(sf::Vector2f(WINDOW_X/2+1,WINDOW_Y))
-    };
+    pongState.line[0] = sf::Vertex(sf::Vector2f(WINDOW_X/2+1,0));
+    pongState.line[1] = sf::Vertex(sf::Vector2f(WINDOW_X/2+1,WINDOW_Y));
 
-    sf::CircleShape ball(BallRad);
-    ball.setPointCount(10);
-    ball.setFillColor(sf::Color::White);
-    ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
+    pongState.ball.setRadius(BallRad);
+    pongState.ball.setPointCount(10);
+    pongState.ball.setFillColor(sf::Color::White);
+    pongState.ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
 
     sf::Clock clock;
     GameMode gameMode = MainMenu;
@@ -79,7 +112,7 @@ int main() {
     sf::Clock clientInputClock;
 
     // Инициализация скорости мяча при старте
-    velocity = initialVelocity;
+    pongState.velocity = initialVelocity;
 
 
     while (window.isOpen()) {
@@ -107,16 +140,7 @@ int main() {
                                 case 0: // Play Offline
                                     gameMode = OfflineGame;
                                     // Сброс состояния игры для новой офлайн-игры
-                                    ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
-                                    paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
-                                    paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
-                                    intScore1 = 0;
-                                    intScore2 = 0;
-                                    strScore1 = std::to_string(intScore1);
-                                    textScore1.setString(strScore1);
-                                    strScore2 = std::to_string(intScore2);
-                                    textScore2.setString(strScore2);
-                                    velocity = initialVelocity;
+                                    pongState.reset();
 
                                     clock.restart();
                                     break;
@@ -124,16 +148,7 @@ int main() {
                                     if (networkManager.startServer(PORT)) {
                                         gameMode = Server;
                                          // Сброс состояния игры для новой сетевой игры
-                                        ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
-                                        paddle1.setPosition(PaddleSize.x,(WINDOW_Y/2) - PaddleSize.y);
-                                        paddle2.setPosition(WINDOW_X-(PaddleSize.x*2), (WINDOW_Y/2)-PaddleSize.y);
-                                        intScore1 = 0;
-                                        intScore2 = 0;
-                                        strScore1 = std::to_string(intScore1);
-                                        textScore1.setString(strScore1);
-                                        strScore2 = std::to_string(intScore2);
-                                        textScore2.setString(strScore2);
-                                        velocity = initialVelocity;
+                                        pongState.reset();
 
                                         clock.restart();
                                         networkClock.restart();
@@ -178,141 +193,124 @@ int main() {
             // На одном экране
             float deltaTime = clock.restart().asSeconds();
 
-            ball.move(velocity * deltaTime);
+            pongState.ball.move(pongState.velocity * deltaTime);
 
-            if (ball.getGlobalBounds().intersects(paddle1.getGlobalBounds()) || 
-                ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) 
+            if (pongState.ball.getGlobalBounds().intersects(pongState.paddle1.getGlobalBounds()) || 
+                pongState.ball.getGlobalBounds().intersects(pongState.paddle2.getGlobalBounds())) 
             {
-                velocity.x = -velocity.x * 1.05f;
-                ball.move(velocity * deltaTime * 2.0f);
+                pongState.velocity.x = -pongState.velocity.x * 1.05f;
+                pongState.ball.move(pongState.velocity * deltaTime * 2.0f);
             }
 
 
-            if (ball.getGlobalBounds().intersects(topBorder.getGlobalBounds()) || 
-                ball.getGlobalBounds().intersects(botBorder.getGlobalBounds())) 
+            if (pongState.ball.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()) || 
+                pongState.ball.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())) 
             {
-                velocity.y = -velocity.y;
+                pongState.velocity.y = - pongState.velocity.y;
             }
 
             
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(paddle1.getGlobalBounds().intersects(topBorder.getGlobalBounds()))) 
-                paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(paddle1.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
-                paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()))) 
+                pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+                pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
 
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !(paddle2.getGlobalBounds().intersects(topBorder.getGlobalBounds())))
-                paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && !(paddle2.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
-                paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
+                pongState.paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+                pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
 
             
-            if (ball.getPosition().x < 0) {
-                intScore2++;
-                strScore2 = std::to_string(intScore2);
-                textScore2.setString(strScore2);
-                ball.setPosition(WINDOW_X - BallRad, WINDOW_Y/2);
-                velocity.x = -initialVelocity.x;
-                velocity.y = initialVelocity.y;
+            if (pongState.ball.getPosition().x < 0) {
+                pongState.intScore2++;
+                pongState.strScore2 = std::to_string(pongState.intScore2);
+                pongState.textScore2.setString(pongState.strScore2);
+                pongState.ball.setPosition(WINDOW_X - BallRad, WINDOW_Y/2);
+                pongState.velocity.x = -initialVelocity.x;
+                pongState.velocity.y = initialVelocity.y;
             }
-            else if (ball.getPosition().x > WINDOW_X) {
-                intScore1++;
-                strScore1 = std::to_string(intScore1);
-                textScore1.setString(strScore1);
-                ball.setPosition(BallRad, WINDOW_Y/2);
-                velocity = initialVelocity;
+            else if (pongState.ball.getPosition().x > WINDOW_X) {
+                pongState.intScore1++;
+                pongState.strScore1 = std::to_string(pongState.intScore1);
+                pongState.textScore1.setString(pongState.strScore1);
+                pongState.ball.setPosition(BallRad, WINDOW_Y/2);
+                pongState.velocity = initialVelocity;
             }
 
             // Отрисовка
-            window.draw(paddle1);
-            window.draw(paddle2);
-            window.draw(ball);
-            window.draw(topBorder);
-            window.draw(botBorder);
-            window.draw(line, 2, sf::Lines);
-            window.draw(textScore1);
-            window.draw(textScore2);
+            pongState.draw(&window);
 
         } 
         else if (gameMode == Server) {
             float deltaTime = clock.restart().asSeconds();
 
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(paddle1.getGlobalBounds().intersects(topBorder.getGlobalBounds())))
-                paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(paddle1.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
-                paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
+                pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+                pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
 
             // Прием ввода от клиента
             PlayerInputPacket clientInput;
             networkManager.receivePlayerInput(clientInput);
 
-            if (clientInput.moveUp && !(paddle2.getGlobalBounds().intersects(topBorder.getGlobalBounds())))
-                paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if (clientInput.moveDown && !(paddle2.getGlobalBounds().intersects(botBorder.getGlobalBounds())))
-                paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
+            if (clientInput.moveUp && !(pongState.paddle2.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
+                pongState.paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+            if (clientInput.moveDown && !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+                pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
 
 
             if (networkManager.hasClient()) {
-                if (ball.getGlobalBounds().intersects(paddle1.getGlobalBounds()) || ball.getGlobalBounds().intersects(paddle2.getGlobalBounds())) {
-                    velocity.x = -velocity.x * 1.05f;                  
+                if (pongState.ball.getGlobalBounds().intersects(pongState.paddle1.getGlobalBounds()) || pongState.ball.getGlobalBounds().intersects(pongState.paddle2.getGlobalBounds())) {
+                    pongState.velocity.x = -pongState.velocity.x * 1.05f;                  
                     
-                    ball.move(velocity * deltaTime * 2.0f);
+                    pongState.ball.move(pongState.velocity * deltaTime * 2.0f);
                 }
 
 
                 
-                if (ball.getGlobalBounds().intersects(topBorder.getGlobalBounds()) || 
-                    ball.getGlobalBounds().intersects(botBorder.getGlobalBounds())) {
-                    velocity.y = -velocity.y;
+                if (pongState.ball.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()) || 
+                    pongState.ball.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())) {
+                    pongState.velocity.y = - pongState.velocity.y;
                 }
 
 
                 // Проверка на гол
-                if (ball.getPosition().x > WINDOW_X) {
-                    intScore1++;
-                    strScore1 = std::to_string(intScore1);
-                    textScore1.setString(strScore1);
-                    ball.setPosition(0, WINDOW_Y/2);
-                    velocity = initialVelocity;
+                if (pongState.ball.getPosition().x > WINDOW_X) {
+                    pongState.intScore1++;
+                    pongState.strScore1 = std::to_string(pongState.intScore1);
+                    pongState.textScore1.setString(pongState.strScore1);
+                    pongState.ball.setPosition(0, WINDOW_Y/2);
+                    pongState.velocity = initialVelocity;
                 }
 
-                if (ball.getPosition().x < 0) {
-                    intScore2++;
-                    strScore2 = std::to_string(intScore2);
-                    textScore2.setString(strScore2);
-                    ball.setPosition(WINDOW_X, WINDOW_Y/2);
-                    velocity.x = -initialVelocity.x;
-                    velocity.y = initialVelocity.y;
+                if (pongState.ball.getPosition().x < 0) {
+                    pongState.intScore2++;
+                    pongState.strScore2 = std::to_string(pongState.intScore2);
+                    pongState.textScore2.setString(pongState.strScore2);
+                    pongState.ball.setPosition(WINDOW_X, WINDOW_Y/2);
+                    pongState.velocity.x = -initialVelocity.x;
+                    pongState.velocity.y = initialVelocity.y;
                 }
 
 
                 // Отправка состояния игры клиенту
                 if (networkManager.isConnected() && networkClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
                     GameStatePacket currentState;
-                    currentState.ballPos = ball.getPosition();
-                    currentState.paddle1Pos = paddle1.getPosition();
-                    currentState.paddle2Pos = paddle2.getPosition();
-                    currentState.score1 = intScore1;
-                    currentState.score2 = intScore2;
-                    currentState.velocity = velocity;
+                    currentState.ballPos = pongState.ball.getPosition();
+                    currentState.paddle1Pos = pongState.paddle1.getPosition();
+                    currentState.paddle2Pos = pongState.paddle2.getPosition();
+                    currentState.score1 = pongState.intScore1;
+                    currentState.score2 = pongState.intScore2;
+                    currentState.velocity = pongState.velocity;
                     networkManager.sendGameState(currentState);
                     networkClock.restart();
                 }
 
-                ball.move(velocity * deltaTime);
+                pongState.ball.move(pongState.velocity * deltaTime);
             }
 
-
-
             // Отрисовка игры
-            window.draw(paddle1);
-            window.draw(paddle2);
-            window.draw(ball);
-            window.draw(topBorder);
-            window.draw(botBorder);
-            window.draw(line, 2, sf::Lines);
-            window.draw(textScore1);
-            window.draw(textScore2);
-
+            pongState.draw(&window);
         } 
         else if (gameMode == Client) {
             if (networkManager.isConnected() && clientInputClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
@@ -326,29 +324,22 @@ int main() {
             // Прием состояния игры от сервера
             GameStatePacket serverState;
             if (networkManager.receiveGameState(serverState)) {
-                ball.setPosition(serverState.ballPos);
-                paddle1.setPosition(serverState.paddle1Pos);
-                paddle2.setPosition(serverState.paddle2Pos);
+                pongState.ball.setPosition(serverState.ballPos);
+                pongState.paddle1.setPosition(serverState.paddle1Pos);
+                pongState.paddle2.setPosition(serverState.paddle2Pos);
 
-                intScore1 = serverState.score1;
-                intScore2 = serverState.score2;
-                strScore1 = std::to_string(intScore1);
-                textScore1.setString(strScore1);
-                strScore2 = std::to_string(intScore2);
-                textScore2.setString(strScore2);
+                pongState.intScore1 = serverState.score1;
+                pongState.intScore2 = serverState.score2;
+                pongState.strScore1 = std::to_string(pongState.intScore1);
+                pongState.textScore1.setString(pongState.strScore1);
+                pongState.strScore2 = std::to_string(pongState.intScore2);
+                pongState.textScore2.setString(pongState.strScore2);
 
-                velocity = serverState.velocity;
+                pongState.velocity = serverState.velocity;
             }
 
             // Отрисовка игры
-            window.draw(paddle1);
-            window.draw(paddle2); 
-            window.draw(ball);
-            window.draw(topBorder);
-            window.draw(botBorder);
-            window.draw(line, 2, sf::Lines);
-            window.draw(textScore1);
-            window.draw(textScore2);
+            pongState.draw(&window);
         }
 
         window.display();
