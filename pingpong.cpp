@@ -20,6 +20,8 @@ enum GameMode {
     Client
 };
 
+sf::Vector2f PaddleSize(WINDOW_X / 160, WINDOW_Y * 2 / 30); // TODO Почему не даёт слинковать, если он в constants.hpp?
+
 enum ServingPaddle {
     Left,
     Right
@@ -128,7 +130,7 @@ public:
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_X, WINDOW_Y), "PingPong", sf::Style::Titlebar | sf::Style::Close);
-    Menu menu(window.getSize().x, window.getSize().y);
+    Menu menu;
 
     window.setVerticalSyncEnabled(true);
 
@@ -167,14 +169,14 @@ int main() {
                         menu.handleInput(event);
                         if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Enter) {
                             switch (menu.getSelectedItem()) {
-                                case 0: // Play Offline
+                                case PlayOffline:
                                     gameMode = OfflineGame;
                                     // Сброс состояния игры для новой офлайн-игры
                                     pongState.reset();
 
                                     clock.restart();
                                     break;
-                                case 1: // Launch Server
+                                case LaunchServer:
                                     if (serverManager.startServer()) {
                                         gameMode = Server;
                                          // Сброс состояния игры для новой сетевой игры
@@ -186,7 +188,7 @@ int main() {
                                         std::cerr << "Failed to start server!" << std::endl;
                                     }
                                     break;
-                                case 2: // Join Server
+                                case JoinServer:
                                     {
                                         clientManager.sendConnectionReq(); //TODO Вернуть проверки
 
@@ -195,7 +197,7 @@ int main() {
                                         networkClock.restart();
                                     }
                                     break;
-                                case 3: // Exit
+                                case Exit:
                                     window.close();
                                     break;
                             }

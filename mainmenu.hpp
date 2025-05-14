@@ -13,7 +13,7 @@ const int MENU_ITEMS_NUM = 4;
 
 class Menu {
     public:
-        Menu(float width, float height);
+        Menu();
         ~Menu();
 
         void draw(sf::RenderWindow &window);

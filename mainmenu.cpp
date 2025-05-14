@@ -1,28 +1,30 @@
 #include <SFML/Network.hpp>
 #include "mainmenu.hpp"
+#include "constants.hpp"
 
-Menu::Menu(float width, float height) {
+Menu::Menu() {
     font.loadFromFile("pong.ttf");
 
     for (int i = 0; i < MENU_ITEMS_NUM; ++i) {
         menu[i].setFont(font);
         menu[i].setFillColor(sf::Color(128, 128, 128));
-        menu[i].setCharacterSize(30);
+        menu[i].setCharacterSize(WINDOW_Y / 30);
     }
 
-    menu[0].setString("Play Offline");
-    menu[0].setPosition(sf::Vector2f(width / 10, height/(MENU_ITEMS_NUM+1)*1));
+    menu[PlayOffline].setString("Play Offline");
+    menu[PlayOffline].setPosition(sf::Vector2f(WINDOW_X / 10, 1 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
+    
 
-    menu[1].setString("Launch Server");
-    menu[1].setPosition(sf::Vector2f(width / 10, height/(MENU_ITEMS_NUM+1)*2));
+    menu[LaunchServer].setString("Launch Server");
+    menu[LaunchServer].setPosition(sf::Vector2f(WINDOW_X / 10, 2 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
-    menu[2].setString("Join Server");
-    menu[2].setPosition(sf::Vector2f(width / 10, height/(MENU_ITEMS_NUM+1)*3));
+    menu[JoinServer].setString("Join Server");
+    menu[JoinServer].setPosition(sf::Vector2f(WINDOW_X / 10, 3 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
-    menu[3].setString("Exit");
-    menu[3].setPosition(sf::Vector2f(width / 10, height/(MENU_ITEMS_NUM+1)*4));
+    menu[Exit].setString("Exit");
+    menu[Exit].setPosition(sf::Vector2f(WINDOW_X / 10, 4 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
-    menu[0].setFillColor(sf::Color::White); // Выбранный пункт по умолчанию
+    menu[PlayOffline].setFillColor(sf::Color::White); // Выбранный пункт по умолчанию
     selectedItemIndex = 0;
 }
 
