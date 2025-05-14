@@ -22,7 +22,7 @@ enum GameMode {
 
 sf::Vector2f PaddleSize(WINDOW_X / 160, WINDOW_Y * 2 / 30); // TODO Почему не даёт слинковать, если он в constants.hpp?
 
-enum ServingPaddle {
+enum Paddle {
     Left,
     Right
 };
@@ -106,8 +106,8 @@ public:
         clock.restart();
     }
 
-    void resetVelocity(ServingPaddle servingPaddle) {
-        velocity.y = rand() % 600 - 300;
+    void resetVelocity(Paddle servingPaddle) {
+        velocity.y = 0;//rand() % 600 - 300;
         
         if (servingPaddle == Left) {
             velocity.x = rand() % 150 + 450;
@@ -129,6 +129,32 @@ public:
 
     float getDeltaTime() {
         return clock.restart().asSeconds();
+    }
+
+    bool ballPaddleIntersection() {
+        return  ball.getGlobalBounds().intersects(paddle1.getGlobalBounds()) || 
+                ball.getGlobalBounds().intersects(paddle2.getGlobalBounds());
+    }
+
+    bool ballBorderIntersection() {
+        return  ball.getGlobalBounds().intersects(topBorder.getGlobalBounds()) || 
+                ball.getGlobalBounds().intersects(botBorder.getGlobalBounds());
+    }
+
+    void gooool(Paddle winnerPaddle) {
+        if (winnerPaddle == Right) {
+            intScore2++;
+            strScore2 = std::to_string(intScore2);
+            textScore2.setString(strScore2);
+            ball.setPosition(WINDOW_X - BallRad - 3 * PaddleSize.x, WINDOW_Y/2);
+            resetVelocity(Right);
+        } else {
+            intScore1++;
+            strScore1 = std::to_string(intScore1);
+            textScore1.setString(strScore1);
+            ball.setPosition(BallRad + 2 * PaddleSize.x, WINDOW_Y/2);
+            resetVelocity(Left);
+        }
     }
 };
 
@@ -233,22 +259,17 @@ int main() {
 
             pongState.ball.move(pongState.velocity * deltaTime);
 
-            if (pongState.ball.getGlobalBounds().intersects(pongState.paddle1.getGlobalBounds()) || 
-                pongState.ball.getGlobalBounds().intersects(pongState.paddle2.getGlobalBounds())) 
-            {
+            if (pongState.ballPaddleIntersection()) {
                 pongState.velocity.x = -pongState.velocity.x * 1.05f;
-                pongState.ball.move(pongState.velocity * deltaTime * 2.0f);
+                //pongState.ball.move(pongState.velocity * deltaTime * 2.0f); 
             }
 
 
-            if (pongState.ball.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()) || 
-                pongState.ball.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())) 
-            {
+            if (pongState.ballBorderIntersection()) {
                 pongState.velocity.y = - pongState.velocity.y;
             }
 
-            
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()))) 
+            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W))) 
                 pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
             if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
                 pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
@@ -260,18 +281,9 @@ int main() {
 
             
             if (pongState.ball.getPosition().x < 0) {
-                pongState.intScore2++;
-                pongState.strScore2 = std::to_string(pongState.intScore2);
-                pongState.textScore2.setString(pongState.strScore2);
-                pongState.ball.setPosition(WINDOW_X - BallRad - 3 * PaddleSize.x, WINDOW_Y/2);
-                pongState.resetVelocity(Right);
-            }
-            else if (pongState.ball.getPosition().x > WINDOW_X) {
-                pongState.intScore1++;
-                pongState.strScore1 = std::to_string(pongState.intScore1);
-                pongState.textScore1.setString(pongState.strScore1);
-                pongState.ball.setPosition(BallRad + 2 * PaddleSize.x, WINDOW_Y/2);
-                pongState.resetVelocity(Left);
+                pongState.gooool(Right);
+            } else if (pongState.ball.getPosition().x > WINDOW_X) {
+                pongState.gooool(Left);
             }
 
             // Отрисовка
