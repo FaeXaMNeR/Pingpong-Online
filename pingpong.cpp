@@ -94,15 +94,15 @@ public:
         velocity = initialVelocity;
     };
 
-    void draw(sf::RenderWindow * window) {
-        window->draw(paddle1);
-        window->draw(paddle2);
-        window->draw(ball);
-        window->draw(topBorder);
-        window->draw(botBorder);
-        window->draw(line, 2, sf::Lines);
-        window->draw(textScore1);
-        window->draw(textScore2);
+    void draw(sf::RenderWindow &window) {
+        window.draw(paddle1);
+        window.draw(paddle2);
+        window.draw(ball);
+        window.draw(topBorder);
+        window.draw(botBorder);
+        window.draw(line, 2, sf::Lines);
+        window.draw(textScore1);
+        window.draw(textScore2);
     };
 };
 
@@ -123,9 +123,12 @@ int main() {
 
     sf::Clock clock;
     GameMode gameMode = MainMenu;
-    NetworkManager networkManager;
+    ServerManager serverManager;
+    ClientManager clientManager;
     sf::Clock networkClock;
     sf::Clock clientInputClock;
+
+    
 
     while (window.isOpen()) {
         sf::Event event;
@@ -139,7 +142,7 @@ int main() {
                     if (event.key.code == sf::Keyboard::Escape) {
                         if (gameMode != MainMenu) {
                             gameMode = MainMenu;
-                            networkManager.disconnect();
+                            serverManager.disconnect();
                         }
                     }
                     break;
@@ -157,7 +160,7 @@ int main() {
                                     clock.restart();
                                     break;
                                 case 1: // Launch Server
-                                    if (networkManager.startServer(PORT)) {
+                                    if (serverManager.startServer()) {
                                         gameMode = Server;
                                          // Сброс состояния игры для новой сетевой игры
                                         pongState.reset();
@@ -170,21 +173,11 @@ int main() {
                                     break;
                                 case 2: // Join Server
                                     {
-                                        sf::IpAddress serverAddress;
-                                        std::string ipString;
+                                        clientManager.sendConnectionReq(); //TODO Вернуть проверки
 
-                                        std::cout << "Enter server IP address:\n";
-                                        std::cin >> ipString;
-
-                                        serverAddress = sf::IpAddress(ipString);
-
-                                        if (networkManager.connectClient(serverAddress, PORT)) {
-                                            gameMode = Client;
-                                            clock.restart();
-                                            networkClock.restart();
-                                        } else {
-                                            std::cerr << "Failed to connect to server!" << std::endl;
-                                        }
+                                        gameMode = Client;
+                                        clock.restart();
+                                        networkClock.restart();
                                     }
                                     break;
                                 case 3: // Exit
@@ -250,109 +243,109 @@ int main() {
             }
 
             // Отрисовка
-            pongState.draw(&window);
+            pongState.draw(window);
 
         } 
-        else if (gameMode == Server) {
-            float deltaTime = clock.restart().asSeconds();
+        // else if (gameMode == Server) {
+        //     float deltaTime = clock.restart().asSeconds();
 
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
-                pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
-                pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
+        //     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
+        //         pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+        //     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+        //         pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
 
-            // Прием ввода от клиента
-            PlayerInputPacket clientInput;
-            networkManager.receivePlayerInput(clientInput);
+        //     // Прием ввода от клиента
+        //     PlayerInputPacket clientInput;
+        //     networkManager.receivePlayerInput(clientInput);
 
-            if (clientInput.moveUp && !(pongState.paddle2.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
-                pongState.paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if (clientInput.moveDown && !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
-                pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
+        //     if (clientInput.moveUp && !(pongState.paddle2.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
+        //         pongState.paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+        //     if (clientInput.moveDown && !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+        //         pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
 
 
-            if (networkManager.hasClient()) {
-                if (pongState.ball.getGlobalBounds().intersects(pongState.paddle1.getGlobalBounds()) || pongState.ball.getGlobalBounds().intersects(pongState.paddle2.getGlobalBounds())) {
-                    pongState.velocity.x = -pongState.velocity.x * 1.05f;                  
+        //     if (networkManager.hasClient()) {
+        //         if (pongState.ball.getGlobalBounds().intersects(pongState.paddle1.getGlobalBounds()) || pongState.ball.getGlobalBounds().intersects(pongState.paddle2.getGlobalBounds())) {
+        //             pongState.velocity.x = -pongState.velocity.x * 1.05f;                  
                     
-                    pongState.ball.move(pongState.velocity * deltaTime * 2.0f);
-                }
+        //             pongState.ball.move(pongState.velocity * deltaTime * 2.0f);
+        //         }
 
 
                 
-                if (pongState.ball.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()) || 
-                    pongState.ball.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())) {
-                    pongState.velocity.y = - pongState.velocity.y;
-                }
+        //         if (pongState.ball.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()) || 
+        //             pongState.ball.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())) {
+        //             pongState.velocity.y = - pongState.velocity.y;
+        //         }
 
 
-                // Проверка на гол
-                if (pongState.ball.getPosition().x > WINDOW_X) {
-                    pongState.intScore1++;
-                    pongState.strScore1 = std::to_string(pongState.intScore1);
-                    pongState.textScore1.setString(pongState.strScore1);
-                    pongState.ball.setPosition(0, WINDOW_Y/2);
-                    pongState.velocity = initialVelocity;
-                }
+        //         // Проверка на гол
+        //         if (pongState.ball.getPosition().x > WINDOW_X) {
+        //             pongState.intScore1++;
+        //             pongState.strScore1 = std::to_string(pongState.intScore1);
+        //             pongState.textScore1.setString(pongState.strScore1);
+        //             pongState.ball.setPosition(0, WINDOW_Y/2);
+        //             pongState.velocity = initialVelocity;
+        //         }
 
-                if (pongState.ball.getPosition().x < 0) {
-                    pongState.intScore2++;
-                    pongState.strScore2 = std::to_string(pongState.intScore2);
-                    pongState.textScore2.setString(pongState.strScore2);
-                    pongState.ball.setPosition(WINDOW_X, WINDOW_Y/2);
-                    pongState.velocity.x = -initialVelocity.x;
-                    pongState.velocity.y = initialVelocity.y;
-                }
+        //         if (pongState.ball.getPosition().x < 0) {
+        //             pongState.intScore2++;
+        //             pongState.strScore2 = std::to_string(pongState.intScore2);
+        //             pongState.textScore2.setString(pongState.strScore2);
+        //             pongState.ball.setPosition(WINDOW_X, WINDOW_Y/2);
+        //             pongState.velocity.x = -initialVelocity.x;
+        //             pongState.velocity.y = initialVelocity.y;
+        //         }
 
 
-                // Отправка состояния игры клиенту
-                if (networkManager.isConnected() && networkClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
-                    GameStatePacket currentState;
-                    currentState.ballPos = pongState.ball.getPosition();
-                    currentState.paddle1Pos = pongState.paddle1.getPosition();
-                    currentState.paddle2Pos = pongState.paddle2.getPosition();
-                    currentState.score1 = pongState.intScore1;
-                    currentState.score2 = pongState.intScore2;
-                    currentState.velocity = pongState.velocity;
-                    networkManager.sendGameState(currentState);
-                    networkClock.restart();
-                }
+        //         // Отправка состояния игры клиенту
+        //         if (networkManager.isConnected() && networkClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
+        //             GameStatePacket currentState;
+        //             currentState.ballPos = pongState.ball.getPosition();
+        //             currentState.paddle1Pos = pongState.paddle1.getPosition();
+        //             currentState.paddle2Pos = pongState.paddle2.getPosition();
+        //             currentState.score1 = pongState.intScore1;
+        //             currentState.score2 = pongState.intScore2;
+        //             currentState.velocity = pongState.velocity;
+        //             networkManager.sendGameState(currentState);
+        //             networkClock.restart();
+        //         }
 
-                pongState.ball.move(pongState.velocity * deltaTime);
-            }
+        //         pongState.ball.move(pongState.velocity * deltaTime);
+        //     }
 
-            // Отрисовка игры
-            pongState.draw(&window);
-        } 
-        else if (gameMode == Client) {
-            if (networkManager.isConnected() && clientInputClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
-                PlayerInputPacket clientInput;
-                clientInput.moveUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
-                clientInput.moveDown = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
-                networkManager.sendPlayerInput(clientInput);
-                clientInputClock.restart();
-            }
+        //     // Отрисовка игры
+        //     pongState.draw(window);
+        // } 
+        // else if (gameMode == Client) {
+        //     if (networkManager.isConnected() && clientInputClock.getElapsedTime().asSeconds() >= 1.0f / TICK_RATE) {
+        //         PlayerInputPacket clientInput;
+        //         clientInput.moveUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+        //         clientInput.moveDown = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+        //         networkManager.sendPlayerInput(clientInput);
+        //         clientInputClock.restart();
+        //     }
 
-            // Прием состояния игры от сервера
-            GameStatePacket serverState;
-            if (networkManager.receiveGameState(serverState)) {
-                pongState.ball.setPosition(serverState.ballPos);
-                pongState.paddle1.setPosition(serverState.paddle1Pos);
-                pongState.paddle2.setPosition(serverState.paddle2Pos);
+        //     // Прием состояния игры от сервера
+        //     GameStatePacket serverState;
+        //     if (networkManager.receiveGameState(serverState)) {
+        //         pongState.ball.setPosition(serverState.ballPos);
+        //         pongState.paddle1.setPosition(serverState.paddle1Pos);
+        //         pongState.paddle2.setPosition(serverState.paddle2Pos);
 
-                pongState.intScore1 = serverState.score1;
-                pongState.intScore2 = serverState.score2;
-                pongState.strScore1 = std::to_string(pongState.intScore1);
-                pongState.textScore1.setString(pongState.strScore1);
-                pongState.strScore2 = std::to_string(pongState.intScore2);
-                pongState.textScore2.setString(pongState.strScore2);
+        //         pongState.intScore1 = serverState.score1;
+        //         pongState.intScore2 = serverState.score2;
+        //         pongState.strScore1 = std::to_string(pongState.intScore1);
+        //         pongState.textScore1.setString(pongState.strScore1);
+        //         pongState.strScore2 = std::to_string(pongState.intScore2);
+        //         pongState.textScore2.setString(pongState.strScore2);
 
-                pongState.velocity = serverState.velocity;
-            }
+        //         pongState.velocity = serverState.velocity;
+        //     }
 
-            // Отрисовка игры
-            pongState.draw(&window);
-        }
+        //     // Отрисовка игры
+        //     pongState.draw(window);
+        // }
 
         window.display();
     }

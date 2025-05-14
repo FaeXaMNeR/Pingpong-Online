@@ -8,10 +8,21 @@
 enum PacketType {
     GameStateUpdate,
     PlayerInput,
+
+    NewRoomReq,
+    RoomConnectionReq,
+
     ConnectionRequest,
     ConnectionAccept,
+
     GameStart,
     PlayerDisconnect
+};
+
+struct PlayerInfo {
+    sf::IpAddress address;
+    unsigned short port;
+    long unsigned playerId;
 };
 
 struct GameStatePacket {
@@ -30,9 +41,9 @@ struct PlayerInputPacket {
     bool moveDown;
 };
 
-struct ConnectionPacket {
-    PacketType type = ConnectionRequest;
-    std::string playerName;
+struct AcceptionPacket {
+    PacketType type = ConnectionAccept;
+    
 };
 
 struct GameStartPacket {
@@ -88,53 +99,55 @@ inline sf::Packet &operator >> (sf::Packet &packet, PlayerInputPacket &input) {
     return packet;
 }
 
-class NetworkManager {
+class ServerManager {
     public:
-        NetworkManager();
-        ~NetworkManager();
+        ServerManager();
+        ~ServerManager();
 
-        bool startServer(unsigned short port);
+        bool startServer();
+        
+        void handleConnectionReq();
         bool connectClient(const sf::IpAddress &address, unsigned short port);
         void disconnect();
 
         void sendGameState(const GameStatePacket &state);
         bool receivePlayerInput(PlayerInputPacket &input);
 
+        // bool isServer() const {
+        //     return isServer_;
+        // }
+        // bool isClient() const {
+        //     return isClient_;
+        // }
+        // bool isConnected() const {
+        //     return isConnected_;
+        // }
+        // bool hasClient() const {
+        //     return clientAddress_ != sf::IpAddress::None;
+        // }
+
+    private:
+        sf::UdpSocket serverSocket;
+        sf::IpAddress serverAddress;
+        unsigned short serverPort;
+
+        bool isServer = false;
+
+        std::vector<PlayerInfo> players;
+};
+
+class ClientManager {
+    public:
+        ClientManager();
+        ~ClientManager();
+
+        void sendConnectionReq();
         void sendPlayerInput(const PlayerInputPacket &input);
         bool receiveGameState(GameStatePacket &state);
 
-        bool isServer() const {
-            return isServer_;
-        }
-        bool isClient() const {
-            return isClient_;
-        }
-        bool isConnected() const {
-            return isConnected_;
-        }
-        bool hasClient() const {
-            return clientAddress_ != sf::IpAddress::None;
-        }
+        sf::UdpSocket clientSocket;
+        sf::IpAddress serverAddress;
+        unsigned short serverPort;
 
-    private:
-        sf::UdpSocket socket_;
-        sf::IpAddress serverAddress_;
-        unsigned short serverPort_;
-
-        sf::IpAddress clientAddress_;
-        unsigned short clientPort_;
-
-        bool isServer_ = false;
-        bool isClient_ = false;
-        bool isConnected_ = false;
-
-        struct PlayerInfo {
-            sf::IpAddress address;
-            unsigned short port;
-            bool isReady;
-            int playerId;
-            char playerName[4];
-        };
-
-        std::vector<PlayerInfo> players;
+        bool isClient = false;
 };

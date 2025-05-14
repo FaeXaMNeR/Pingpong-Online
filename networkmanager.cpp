@@ -1,116 +1,139 @@
 #include <iostream>
+#include <cassert>
 
 #include "networkmanager.hpp"
 
-NetworkManager::NetworkManager() {
-    socket_.setBlocking(false);
+ServerManager::ServerManager() {
+    serverSocket.setBlocking(false);
 }
 
-NetworkManager::~NetworkManager() {
+ServerManager::~ServerManager() {
     disconnect();
 }
 
-bool NetworkManager::startServer(unsigned short port) {
-    if (socket_.bind(port) != sf::Socket::Done) {
-        std::cerr << "Failed to bind server socket to port " << port << std::endl;
+bool ServerManager::startServer() {
+    if (serverSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done) {
+        std::cerr << "Failed to bind server socket to port" << std::endl;
         return false;
     }
+    serverPort = serverSocket.getLocalPort();
+    serverAddress = sf::IpAddress::getLocalAddress();
+    isServer = true;
 
-    isServer_ = true;
-    isConnected_ = true;
+    std::cout << "Your local IP address is " << serverAddress << std::endl;
+    std::cout << "Server started on port " << serverPort << std::endl;
 
-    PlayerInfo host = {sf::IpAddress::getLocalAddress(), port, true, 0, "HST"};
+    PlayerInfo host = {serverAddress, serverPort, 0};
     players.push_back(host);
 
-    std::cout << "Server started on port " << port << std::endl;
-    std::cout << "Your local IP address is " << host.address << std::endl;
-
     return true;
 }
 
-bool NetworkManager::connectClient(const sf::IpAddress &address, unsigned short port) {
-    serverAddress_ = address;
-    serverPort_ = port;
+void ClientManager::sendConnectionReq() { // TODO проверки
+    std::cout << "Enter server address: ";
+    std::cin >> serverAddress;
+    std::cout << "Enter server port: ";
+    std::cin >> serverPort;
+    
+    sf::Packet packet;
+    packet << ConnectionRequest;
 
-    isClient_ = true;
-    isConnected_ = true;
+    std::cout << "Sending connection request to " << serverAddress << " using port " << serverPort << std::endl;
 
-    std::cout << "Client connecting to " << address << ":" << port << std::endl;
-    return true;
+    if (clientSocket.send(packet, serverAddress, serverPort) != sf::Socket::Done) {
+        std::cerr << "Failed to send connection request" << std::endl;
+    }
 }
 
-void NetworkManager::disconnect() {
-    socket_.unbind();
-    isServer_ = false;
-    isClient_ = false;
-    isConnected_ = false;
+void ServerManager::handleConnectionReq() {
+    sf::Packet packet;
+    sf::IpAddress clientAddress;
+    unsigned short clientPort;
 
-    serverAddress_ = sf::IpAddress::None;
-    serverPort_ = 0;
+    if (serverSocket.receive(packet, clientAddress, clientPort) == sf::Socket::Done) {
+        PlayerInfo newPlayer = {clientAddress, clientPort, players.size()};
+        std::cout << "New player!" << std::endl;
+        std::cout << "New player address: " << newPlayer.address    << std::endl;
+        std::cout << "New player port:    " << newPlayer.port       << std::endl;
+        std::cout << "New player game id: " << newPlayer.playerId   << std::endl;
+        players.push_back(newPlayer);
+    }
+}
 
-    clientAddress_ = sf::IpAddress::None;
-    clientPort_ = 0;
+void ServerManager::disconnect() {
+    serverSocket.unbind();
+    isServer = false;
+
+    players.clear();
     
     std::cout << "Disconnected" << std::endl;
 }
 
-void NetworkManager::sendGameState(const GameStatePacket &state) {
-    if (!isServer_ || !isConnected_ || clientAddress_ == sf::IpAddress::None) return;
+// void ServerManager::sendGameState(const GameStatePacket &state) {
+//     if (!isServer_ || !isConnected_ || clientAddress_ == sf::IpAddress::None) return;
 
-    sf::Packet packet;
-    packet << state;
+//     sf::Packet packet;
+//     packet << state;
 
-    socket_.send(packet, clientAddress_, clientPort_);
+//     socket_.send(packet, clientAddress_, clientPort_);
+// }
+
+// bool ServerManager::receivePlayerInput(PlayerInputPacket &input) {
+//     if (!isServer_ || !isConnected_) return false;
+
+//     sf::Packet packet;
+//     sf::IpAddress senderAddress;
+//     unsigned short senderPort;
+
+//     if (socket_.receive(packet, senderAddress, senderPort) == sf::Socket::Done) {
+//         if (clientAddress_ == sf::IpAddress::None) {
+//             clientAddress_ = senderAddress;
+//             clientPort_ = senderPort;
+
+//             std::cout << "Client connected from " << senderAddress << ":" << senderPort << std::endl;
+//         }
+
+//         if (senderAddress == clientAddress_ && senderPort == clientPort_) {
+//             if (packet >> input) {
+//                 return true;
+//             }
+//         }
+//     }
+
+//     return false;
+// }
+
+// void ClientManager::sendPlayerInput(const PlayerInputPacket &input) {
+//     if (!isClient_ || !isConnected_) return;
+
+//     sf::Packet packet;
+//     packet << input;
+
+//     if (socket_.send(packet, serverAddress_, serverPort_) != sf::Socket::Done) {
+//         std::cerr << "Failed to send player input packet to server" << std::endl;
+//     }
+// }
+
+// bool ClientManager::receiveGameState(GameStatePacket &state) {
+//     if (!isClient_ || !isConnected_) return false;
+
+//     sf::Packet packet;
+//     sf::IpAddress senderAddress;
+//     unsigned short senderPort;
+
+//     if (socket_.receive(packet, senderAddress, senderPort) == sf::Socket::Done) {
+//         if (packet >> state) {
+//             return true;
+//         }
+//     }
+
+//     return false;
+// }
+
+ClientManager::ClientManager() {
+    
 }
 
-bool NetworkManager::receivePlayerInput(PlayerInputPacket &input) {
-    if (!isServer_ || !isConnected_) return false;
-
-    sf::Packet packet;
-    sf::IpAddress senderAddress;
-    unsigned short senderPort;
-
-    if (socket_.receive(packet, senderAddress, senderPort) == sf::Socket::Done) {
-        if (clientAddress_ == sf::IpAddress::None) {
-            clientAddress_ = senderAddress;
-            clientPort_ = senderPort;
-
-            std::cout << "Client connected from " << senderAddress << ":" << senderPort << std::endl;
-        }
-
-        if (senderAddress == clientAddress_ && senderPort == clientPort_) {
-            if (packet >> input) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-void NetworkManager::sendPlayerInput(const PlayerInputPacket &input) {
-    if (!isClient_ || !isConnected_) return;
-
-    sf::Packet packet;
-    packet << input;
-
-    if (socket_.send(packet, serverAddress_, serverPort_) != sf::Socket::Done) {
-        std::cerr << "Failed to send player input packet to server" << std::endl;
-    }
-}
-
-bool NetworkManager::receiveGameState(GameStatePacket &state) {
-    if (!isClient_ || !isConnected_) return false;
-
-    sf::Packet packet;
-    sf::IpAddress senderAddress;
-    unsigned short senderPort;
-
-    if (socket_.receive(packet, senderAddress, senderPort) == sf::Socket::Done) {
-        if (packet >> state) {
-            return true;
-        }
-    }
-
-    return false;
+ClientManager::~ClientManager() {
+    
 }
