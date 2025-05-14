@@ -14,7 +14,6 @@ Menu::Menu() {
     menu[PlayOffline].setString("Play Offline");
     menu[PlayOffline].setPosition(sf::Vector2f(WINDOW_X / 10, 1 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
     
-
     menu[LaunchServer].setString("Launch Server");
     menu[LaunchServer].setPosition(sf::Vector2f(WINDOW_X / 10, 2 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
@@ -37,7 +36,7 @@ void Menu::draw(sf::RenderWindow &window) {
 }
 
 void Menu::handleInput(sf::Event &event) {
-    if (event.type == sf::Event::KeyReleased) {
+    if (event.type == sf::Event::KeyPressed) {
         switch (event.key.code) {
             case sf::Keyboard::Up:
             case sf::Keyboard::W:

@@ -43,6 +43,7 @@ public:
     sf::Font font;   
     sf::CircleShape ball;
     sf::Vector2f velocity;
+    sf::Clock clock;
 
     void setTheGame() {
         paddle1.setSize(PaddleSize);
@@ -80,10 +81,8 @@ public:
         ball.setRadius(BallRad);
         ball.setPointCount(10);
         ball.setFillColor(sf::Color::White);
-        ball.setPosition(sf::Vector2f(WINDOW_X / 2, WINDOW_Y / 2));
-
-        
-    };
+        ball.setPosition(sf::Vector2f(WINDOW_X / 2, WINDOW_Y / 2));  
+    }
 
     void convertScoreToText() {
         strScore1 = std::to_string(intScore1);
@@ -91,7 +90,7 @@ public:
 
         strScore2 = std::to_string(intScore2);
         textScore2.setString(strScore2);
-    };
+    }
     
     void reset() {
         ball.setPosition(sf::Vector2f(BallRad + 2 * PaddleSize.x, WINDOW_Y / 2));
@@ -104,7 +103,8 @@ public:
         strScore2 = std::to_string(intScore2);
         textScore2.setString(strScore2);
         resetVelocity(Left);
-    };
+        clock.restart();
+    }
 
     void resetVelocity(ServingPaddle servingPaddle) {
         velocity.y = rand() % 600 - 300;
@@ -125,7 +125,11 @@ public:
         window.draw(line, 2, sf::Lines);
         window.draw(textScore1);
         window.draw(textScore2);
-    };
+    }
+
+    float getDeltaTime() {
+        return clock.restart().asSeconds();
+    }
 };
 
 int main() {
@@ -138,74 +142,86 @@ int main() {
 
     pongState.setTheGame();
 
-    sf::Clock clock;
     GameMode gameMode = MainMenu;
     ServerManager serverManager;
     ClientManager clientManager;
     sf::Clock networkClock;
     sf::Clock clientInputClock;
 
-    
+    sf::Event event;
 
     while (window.isOpen()) {
-        sf::Event event;
         while (window.pollEvent(event)) {
             switch (event.type) {
-                case sf::Event::Closed:
+                case sf::Event::Closed: {
                     window.close();
                     break;
+                }
 
-                case sf::Event::KeyPressed:
-                    if (event.key.code == sf::Keyboard::Escape) {
-                        if (gameMode != MainMenu) {
-                            gameMode = MainMenu;
-                            serverManager.disconnect();
+                case sf::Event::KeyPressed: {
+                    switch (event.key.code) {
+                        case sf::Keyboard::Escape: {
+                            if (gameMode != MainMenu) {
+                                if (gameMode == Server || gameMode == Client) {
+                                    serverManager.disconnect();
+                                }
+
+                                gameMode = MainMenu;
+                            } 
+                            break;
                         }
-                    }
-                    break;
-
-                default:
-                    if (gameMode == MainMenu) {
-                        menu.handleInput(event);
-                        if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Enter) {
-                            switch (menu.getSelectedItem()) {
-                                case PlayOffline:
-                                    gameMode = OfflineGame;
-                                    // Сброс состояния игры для новой офлайн-игры
-                                    pongState.reset();
-
-                                    clock.restart();
-                                    break;
-                                case LaunchServer:
-                                    if (serverManager.startServer()) {
-                                        gameMode = Server;
-                                         // Сброс состояния игры для новой сетевой игры
+                        
+                        case sf::Keyboard::Enter: {
+                            if (gameMode == MainMenu) {
+                                switch (menu.getSelectedItem()) {
+                                    case PlayOffline: {
+                                        gameMode = OfflineGame;
                                         pongState.reset();
-
-                                        clock.restart();
-                                        networkClock.restart();
-                                    } else {
-                                        std::cerr << "Failed to start server!" << std::endl;
+                                        break;
                                     }
-                                    break;
-                                case JoinServer:
-                                    {
+
+                                    case LaunchServer: {
+                                        if (serverManager.startServer()) {
+                                            gameMode = Server;
+                                            pongState.reset();
+                                            networkClock.restart();
+                                        } else {
+                                            std::cerr << "Failed to start server!" << std::endl;
+                                        }
+                                        break;
+                                    }
+
+                                    case JoinServer: {
                                         clientManager.sendConnectionReq(); //TODO Вернуть проверки
 
                                         gameMode = Client;
-                                        clock.restart();
+                                        // clock.restart();
                                         networkClock.restart();
+                                        break;
                                     }
-                                    break;
-                                case Exit:
-                                    window.close();
-                                    break;
-                            }
+
+                                    case Exit: {
+                                        window.close();
+                                        break;
+                                    }
+                                }
+                            } 
+                            break;
                         }
-                    }
-                    break;
+
+                        default: {
+                            if (gameMode == MainMenu) {
+                                menu.handleInput(event);
+                            }
+                            break;
+                        }
+                    } 
+                } 
+
+                default: 
+                    break;  
             }
-        }
+        } // TODO РАЗОБРАТЬ ЭТО НА ЧТО-ТО ПОПРОЩЕ, А ТО ЭТО ТРЫНДЕЦ
 
         window.clear(sf::Color::Black);
 
@@ -213,7 +229,7 @@ int main() {
             menu.draw(window);
         } else if (gameMode == OfflineGame) {
             // На одном экране
-            float deltaTime = clock.restart().asSeconds();
+            float deltaTime = pongState.getDeltaTime();
 
             pongState.ball.move(pongState.velocity * deltaTime);
 

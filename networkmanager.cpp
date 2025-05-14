@@ -7,9 +7,7 @@ ServerManager::ServerManager() {
     serverSocket.setBlocking(false);
 }
 
-ServerManager::~ServerManager() {
-    disconnect();
-}
+ServerManager::~ServerManager() {}
 
 bool ServerManager::startServer() {
     if (serverSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done) {
