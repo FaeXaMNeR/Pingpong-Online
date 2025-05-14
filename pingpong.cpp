@@ -20,6 +20,11 @@ enum GameMode {
     Client
 };
 
+enum ServingPaddle {
+    Left,
+    Right
+};
+
 class PongState {
 public:
     sf::RectangleShape paddle1;
@@ -32,7 +37,8 @@ public:
     std::string strScore1;
     std::string strScore2;
     sf::Text textScore1;
-    sf::Text textScore2;   
+    sf::Text textScore2;
+    sf::Font font;   
     sf::CircleShape ball;
     sf::Vector2f velocity;
 
@@ -59,6 +65,10 @@ public:
 
         textScore1.setPosition(sf::Vector2f(WINDOW_X * 1 / 5, 0));
         textScore2.setPosition(sf::Vector2f(WINDOW_X * 4 / 5, 0));
+        
+        font.loadFromFile("pong.ttf");
+        textScore1.setFont(font);
+        textScore2.setFont(font);
 
         convertScoreToText();
 
@@ -70,7 +80,7 @@ public:
         ball.setFillColor(sf::Color::White);
         ball.setPosition(sf::Vector2f(WINDOW_X / 2, WINDOW_Y / 2));
 
-        velocity = initialVelocity;
+        
     };
 
     void convertScoreToText() {
@@ -82,7 +92,7 @@ public:
     };
     
     void reset() {
-        ball.setPosition(sf::Vector2f(WINDOW_X/2.f, WINDOW_Y/2.f));
+        ball.setPosition(sf::Vector2f(BallRad + 2 * PaddleSize.x, WINDOW_Y / 2));
         paddle1.setPosition(               PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y / 2);
         paddle2.setPosition(WINDOW_X - 2 * PaddleSize.x, WINDOW_Y / 2 - PaddleSize.y / 2);
         intScore1 = 0;
@@ -91,8 +101,18 @@ public:
         textScore1.setString(strScore1);
         strScore2 = std::to_string(intScore2);
         textScore2.setString(strScore2);
-        velocity = initialVelocity;
+        resetVelocity(Left);
     };
+
+    void resetVelocity(ServingPaddle servingPaddle) {
+        velocity.y = rand() % 600 - 300;
+        
+        if (servingPaddle == Left) {
+            velocity.x = rand() % 150 + 450;
+        } else {
+            velocity.x = - (rand() % 150 + 450);
+        }
+    }
 
     void draw(sf::RenderWindow &window) {
         window.draw(paddle1);
@@ -113,11 +133,6 @@ int main() {
     window.setVerticalSyncEnabled(true);
 
     PongState pongState;
-
-    sf::Font font;
-    font.loadFromFile("pong.ttf");
-    pongState.textScore1.setFont(font);
-    pongState.textScore2.setFont(font);
 
     pongState.setTheGame();
 
@@ -230,16 +245,15 @@ int main() {
                 pongState.intScore2++;
                 pongState.strScore2 = std::to_string(pongState.intScore2);
                 pongState.textScore2.setString(pongState.strScore2);
-                pongState.ball.setPosition(WINDOW_X - BallRad - 2*PaddleSize.x, WINDOW_Y/2);
-                pongState.velocity.x = -initialVelocity.x;
-                pongState.velocity.y = initialVelocity.y;
+                pongState.ball.setPosition(WINDOW_X - BallRad - 3 * PaddleSize.x, WINDOW_Y/2);
+                pongState.resetVelocity(Right);
             }
             else if (pongState.ball.getPosition().x > WINDOW_X) {
                 pongState.intScore1++;
                 pongState.strScore1 = std::to_string(pongState.intScore1);
                 pongState.textScore1.setString(pongState.strScore1);
-                pongState.ball.setPosition(BallRad + 2*PaddleSize.x, WINDOW_Y/2);
-                pongState.velocity = initialVelocity;
+                pongState.ball.setPosition(BallRad + 2 * PaddleSize.x, WINDOW_Y/2);
+                pongState.resetVelocity(Left);
             }
 
             // Отрисовка

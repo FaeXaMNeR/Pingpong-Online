@@ -1,7 +1,15 @@
 #pragma once
+
 #include <SFML/Graphics.hpp>
 
-#define MAX_NUMBER_ITEMS 4
+enum MenuItem {
+    PlayOffline,
+    LaunchServer,
+    JoinServer,
+    Exit
+};
+
+const int MENU_ITEMS_NUM = 4;
 
 class Menu {
     public:
@@ -20,5 +28,5 @@ class Menu {
 
         int selectedItemIndex;
         sf::Font font;
-        sf::Text menu[MAX_NUMBER_ITEMS];
+        sf::Text menu[MENU_ITEMS_NUM];
 };

@@ -9,11 +9,10 @@ enum PacketType {
     GameStateUpdate,
     PlayerInput,
 
-    NewRoomReq,
-    RoomConnectionReq,
-
     ConnectionRequest,
     ConnectionAccept,
+
+    RoomConnectionReq,
 
     GameStart,
     PlayerDisconnect
