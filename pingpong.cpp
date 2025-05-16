@@ -111,6 +111,7 @@ public:
     }
 
     void draw(sf::RenderWindow &window) {
+        window.clear(sf::Color::Black);
         window.draw(paddle1);
         window.draw(paddle2);
         window.draw(ball);
@@ -193,6 +194,7 @@ int main() {
             case OfflineGame: {
                 float deltaTime = pongState.getDeltaTime();
 
+
                 pongState.ball.move(pongState.velocity * deltaTime);
 
                 pongState.handleBallCollisions();
@@ -207,7 +209,6 @@ int main() {
                 if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
                     pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));  // TODO что-то сделать с этим безобразием
 
-                
                 if (pongState.ball.getPosition().x < 0) {
                     pongState.gooool(Right);
                 } else if (pongState.ball.getPosition().x > WINDOW_X) {
@@ -215,7 +216,7 @@ int main() {
                 }
 
                 // Отрисовка
-                window.clear(sf::Color::Black);
+                
                 pongState.draw(window);
                 break;
             }
@@ -227,11 +228,15 @@ int main() {
         if (event.type == sf::Event::Closed) {
             window.close();
         } 
+        if (/*event.type == sf::Event::KeyPressed && */event.key.code == sf::Keyboard::Escape) {
+            menu.draw(window);
+            gameMode = MainMenu;
+        }
 
         
-        // if (window.pollEvent(event)) {
-        //     std::cout << event.key.code << std::endl;   
-        // }
+        if (eventOccured) {
+            std::cout << event.key.code << std::endl;   
+        }
                   
         
         window.display();

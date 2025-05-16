@@ -32,6 +32,7 @@ Menu::Menu() {
 Menu::~Menu() {}
 
 void Menu::draw(sf::RenderWindow &window) {
+    window.clear(sf::Color::Black);
     for (int i = 0; i < MENU_ITEMS_NUM; ++i) {
         window.draw(menu[i]);
     }
