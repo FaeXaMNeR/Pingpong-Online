@@ -70,6 +70,7 @@ GameMode Menu::handleInput(sf::Event &event, sf::RenderWindow &window) {
 
                     case Exit: {
                         window.close();
+                        return None;
                         break;
                     }
 

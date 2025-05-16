@@ -178,54 +178,99 @@ int main() {
     bool eventOccured;
 
     while (window.isOpen()) {
-        eventOccured = window.pollEvent(event);
+        
         switch (gameMode) {
             case MainMenu: {
-                menu.draw(window);
-                if (eventOccured) {
-                    gameMode = menu.handleInput(event, window);
-                    if (gameMode != MainMenu) {
-                        pongState.reset();
-                    }    
-                }         
+                while (gameMode == MainMenu) {
+                    eventOccured = window.pollEvent(event);
+                    menu.draw(window);
+                    if (eventOccured) {
+                        gameMode = menu.handleInput(event, window);
+                          
+                        if (event.type == sf::Event::Closed) {
+                            window.close();
+                        }                 
+                    }  
+                    window.display();
+                }
+                pongState.reset();
                 break;
             }
 
             case OfflineGame: {
-                float deltaTime = pongState.getDeltaTime();
+                while (gameMode == OfflineGame) {
+                    float deltaTime = pongState.getDeltaTime();
 
-                pongState.ball.move(pongState.velocity * deltaTime);
+                    pongState.ball.move(pongState.velocity * deltaTime);
 
-                pongState.handleBallCollisions();
+                    pongState.handleBallCollisions();
 
-                if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()))) 
-                    pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-                if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
-                    pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
+                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && 
+                            !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()))) 
+                        pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
 
-                if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
-                    pongState.paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-                if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
-                    pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));  // TODO что-то сделать с этим безобразием
+                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && 
+                            !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+                        pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
 
-                if (pongState.ball.getPosition().x < 0) {
-                    pongState.gooool(Right);
-                } else if (pongState.ball.getPosition().x > WINDOW_X) {
-                    pongState.gooool(Left);
+                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && 
+                            !(pongState.paddle2.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
+                        pongState.paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+                    
+                    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && 
+                                !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+                        pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));  // TODO что-то сделать с этим безобразием
+
+                    if (pongState.ball.getPosition().x < 0) {
+                        pongState.gooool(Right);
+                    } else if (pongState.ball.getPosition().x > WINDOW_X) {
+                        pongState.gooool(Left);
+                    }
+
+                    window.pollEvent(event);
+                    if (event.type == sf::Event::Closed) {
+                        window.close();
+                    } 
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        gameMode = MainMenu;
+                    } 
+                    
+                    pongState.draw(window);
+                    window.display();
                 }
-                
-                pongState.draw(window);
                 break;
             }
 
             case Server: {
                 serverManager.startServer();
-                serverManager.handleConnectionReq();
+                PlayerInputPacket input;
+                while (gameMode == Server) {
+                    serverManager.handleNetworkInput(input);
+
+                    window.pollEvent(event);
+                    if (event.type == sf::Event::Closed) {
+                        window.close();
+                    } 
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        gameMode = MainMenu;
+                    } 
+                }
+                serverManager.disconnect();
                 break;
             }
 
             case Client: {
                 clientManager.sendConnectionReq();
+                while (gameMode == Client) {
+                    clientManager.handleNetworkInput();
+                    window.pollEvent(event);
+                    if (event.type == sf::Event::Closed) {
+                        window.close();
+                    } 
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        gameMode = MainMenu;
+                    } 
+                }
             }
 
             default:
@@ -243,7 +288,7 @@ int main() {
     }
 
 
-        // else if (gameMode == Server) {
+        // if (gameMode == Server) {
         //     float deltaTime = clock.restart().asSeconds();
 
         //     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
@@ -262,36 +307,12 @@ int main() {
 
 
         //     if (networkManager.hasClient()) {
-        //         if (pongState.ball.getGlobalBounds().intersects(pongState.paddle1.getGlobalBounds()) || pongState.ball.getGlobalBounds().intersects(pongState.paddle2.getGlobalBounds())) {
-        //             pongState.velocity.x = -pongState.velocity.x * 1.05f;                  
-                    
-        //             pongState.ball.move(pongState.velocity * deltaTime * 2.0f);
-        //         }
-
-
-                
-        //         if (pongState.ball.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()) || 
-        //             pongState.ball.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())) {
-        //             pongState.velocity.y = - pongState.velocity.y;
-        //         }
-
-
-        //         // Проверка на гол
-        //         if (pongState.ball.getPosition().x > WINDOW_X) {
-        //             pongState.intScore1++;
-        //             pongState.strScore1 = std::to_string(pongState.intScore1);
-        //             pongState.textScore1.setString(pongState.strScore1);
-        //             pongState.ball.setPosition(0, WINDOW_Y/2);
-        //             pongState.velocity = initialVelocity;
-        //         }
+        //         pongState.handleBallCollisions();
 
         //         if (pongState.ball.getPosition().x < 0) {
-        //             pongState.intScore2++;
-        //             pongState.strScore2 = std::to_string(pongState.intScore2);
-        //             pongState.textScore2.setString(pongState.strScore2);
-        //             pongState.ball.setPosition(WINDOW_X, WINDOW_Y/2);
-        //             pongState.velocity.x = -initialVelocity.x;
-        //             pongState.velocity.y = initialVelocity.y;
+        //             pongState.gooool(Right);
+        //         } else if (pongState.ball.getPosition().x > WINDOW_X) {
+        //             pongState.gooool(Left);
         //         }
 
 

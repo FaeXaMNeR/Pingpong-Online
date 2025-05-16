@@ -4,5 +4,6 @@ enum GameMode {
     MainMenu,
     OfflineGame,
     Server,
-    Client
+    Client,
+    None
 };

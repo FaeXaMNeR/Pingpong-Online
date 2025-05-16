@@ -50,7 +50,7 @@ struct GameStartPacket {
     int assignedPlayerId;
 };
 
-inline sf::Packet &operator >> (sf::Packet &packet, PacketType &type) {
+inline sf::Packet& operator >> (sf::Packet &packet, PacketType &type) {
     sf::Int32 typeAsInt;
     if (packet >> typeAsInt) {
         type = static_cast<PacketType>(typeAsInt);
@@ -59,11 +59,11 @@ inline sf::Packet &operator >> (sf::Packet &packet, PacketType &type) {
     return packet;
 }
 
-inline sf::Packet &operator << (sf::Packet &packet, const PacketType &type) {
+inline sf::Packet& operator << (sf::Packet &packet, const PacketType &type) {
     return packet << static_cast<sf::Int32>(type);
 }
 
-inline sf::Packet &operator << (sf::Packet &packet, const GameStatePacket &state) {
+inline sf::Packet& operator << (sf::Packet &packet, const GameStatePacket &state) {
     return packet << state.type
                   << state.ballPos.x << state.ballPos.y
                   << state.paddle1Pos.x << state.paddle1Pos.y
@@ -72,7 +72,7 @@ inline sf::Packet &operator << (sf::Packet &packet, const GameStatePacket &state
                   << state.velocity.x << state.velocity.y; 
 }
 
-inline sf::Packet &operator >> (sf::Packet &packet, GameStatePacket &state) {
+inline sf::Packet& operator >> (sf::Packet &packet, GameStatePacket &state) {
     PacketType receivedType;
     if (packet >> receivedType && receivedType == GameStateUpdate) {
         packet >> state.ballPos.x >> state.ballPos.y
@@ -85,7 +85,7 @@ inline sf::Packet &operator >> (sf::Packet &packet, GameStatePacket &state) {
     return packet;
 }
 
-inline sf::Packet &operator << (sf::Packet &packet, const PlayerInputPacket &input) {
+inline sf::Packet& operator << (sf::Packet &packet, const PlayerInputPacket &input) {
     return packet << input.type << input.moveUp << input.moveDown;
 }
 
@@ -105,7 +105,7 @@ class ServerManager {
 
         void startServer();
         
-        void handleConnectionReq();
+        void handleNetworkInput(PlayerInputPacket &input);
         bool connectClient(const sf::IpAddress &address, unsigned short port);
         void disconnect();
 
@@ -141,10 +141,15 @@ class ClientManager {
         ~ClientManager();
 
         void sendConnectionReq();
+        void handleNetworkInput();
         void sendPlayerInput(const PlayerInputPacket &input);
         bool receiveGameState(GameStatePacket &state);
 
         sf::UdpSocket clientSocket;
+
+        sf::IpAddress clientAddress;
+        unsigned short clientPort;
+
         sf::IpAddress serverAddress;
         unsigned short serverPort;
 

@@ -42,18 +42,37 @@ void ClientManager::sendConnectionReq() { // TODO проверки
     }
 }
 
-void ServerManager::handleConnectionReq() {
-    sf::Packet packet;
+void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
+    sf::Packet inputPacket;
+    sf::Packet outputPacket;
+    PacketType packetType;
     sf::IpAddress clientAddress;
     unsigned short clientPort;
 
-    if (serverSocket.receive(packet, clientAddress, clientPort) == sf::Socket::Done) {
-        PlayerInfo newPlayer = {clientAddress, clientPort, players.size()};
-        std::cout << "New player!" << std::endl;
-        std::cout << "New player address: " << newPlayer.address    << std::endl;
-        std::cout << "New player port:    " << newPlayer.port       << std::endl;
-        std::cout << "New player game id: " << newPlayer.playerId   << std::endl;
-        players.push_back(newPlayer);
+    if (serverSocket.receive(inputPacket, clientAddress, clientPort) == sf::Socket::Done) {
+        inputPacket >> packetType;
+        switch (packetType) {
+            case ConnectionRequest: {
+                PlayerInfo newPlayer = {clientAddress, clientPort, players.size()};
+                std::cout << "New player!" << std::endl;
+                std::cout << "New player address: " << newPlayer.address    << std::endl;
+                std::cout << "New player port:    " << newPlayer.port       << std::endl;
+                std::cout << "New player game id: " << newPlayer.playerId   << std::endl;
+                players.push_back(newPlayer);
+                outputPacket << ConnectionAccept;
+                serverSocket.send(outputPacket, clientAddress, clientPort);
+                break;
+            }
+            case PlayerInput: {
+                inputPacket >> input;
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        
+        
     }
 }
 
@@ -66,6 +85,23 @@ void ServerManager::disconnect() {
     std::cout << "Disconnected" << std::endl;
 }
 
+void ClientManager::handleNetworkInput() {
+    sf::Packet packet;
+    PacketType packetType;
+
+    if (clientSocket.receive(packet, serverAddress, serverPort) == sf::Socket::Done) {
+        packet >> packetType;
+        switch (packetType) {
+            case ConnectionAccept: {
+                std::cout << "The server accepted your connection request!" << std::endl;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+}
+
 // void ServerManager::sendGameState(const GameStatePacket &state) {
 //     if (!isServer_ || !isConnected_ || clientAddress_ == sf::IpAddress::None) return;
 
@@ -76,20 +112,11 @@ void ServerManager::disconnect() {
 // }
 
 // bool ServerManager::receivePlayerInput(PlayerInputPacket &input) {
-//     if (!isServer_ || !isConnected_) return false;
-
 //     sf::Packet packet;
 //     sf::IpAddress senderAddress;
 //     unsigned short senderPort;
 
 //     if (socket_.receive(packet, senderAddress, senderPort) == sf::Socket::Done) {
-//         if (clientAddress_ == sf::IpAddress::None) {
-//             clientAddress_ = senderAddress;
-//             clientPort_ = senderPort;
-
-//             std::cout << "Client connected from " << senderAddress << ":" << senderPort << std::endl;
-//         }
-
 //         if (senderAddress == clientAddress_ && senderPort == clientPort_) {
 //             if (packet >> input) {
 //                 return true;
