@@ -11,14 +11,8 @@
 #include "mainmenu.hpp"
 #include "constants.hpp"
 #include "networkmanager.hpp"
+#include "pingpong.hpp"
 
-// Определение состояний игры (для управления режимами: меню, офлайн, сервер, клиент)
-enum GameMode {
-    MainMenu,
-    OfflineGame,
-    Server,
-    Client
-};
 
 sf::Vector2f PaddleSize(WINDOW_X / 160, WINDOW_Y * 2 / 30); // TODO Почему не даёт слинковать, если он в constants.hpp?
 
@@ -107,7 +101,7 @@ public:
     }
 
     void resetVelocity(Paddle servingPaddle) {
-        velocity.y = 0;//rand() % 600 - 300;
+        velocity.y = rand() % 600 - 300;
         
         if (servingPaddle == Left) {
             velocity.x = rand() % 150 + 450;
@@ -156,6 +150,11 @@ public:
             resetVelocity(Left);
         }
     }
+
+    void handleBallCollisions() {
+        velocity.x -= 2 * velocity.x * 1.05 * ballPaddleIntersection();
+        velocity.y -= 2 * velocity.y * ballBorderIntersection();
+    }
 };
 
 int main() {
@@ -175,121 +174,70 @@ int main() {
     sf::Clock clientInputClock;
 
     sf::Event event;
+    bool eventOccured;
 
     while (window.isOpen()) {
-        while (window.pollEvent(event)) {
-            switch (event.type) {
-                case sf::Event::Closed: {
-                    window.close();
-                    break;
+        eventOccured = window.pollEvent(event);
+        switch (gameMode) {
+            case MainMenu: {
+                menu.draw(window);
+                if (eventOccured) {
+                    gameMode = menu.handleInput(event, window);
+                    if (gameMode != MainMenu) {
+                        pongState.reset();
+                    }    
+                }         
+                break;
+            }
+
+            case OfflineGame: {
+                float deltaTime = pongState.getDeltaTime();
+
+                pongState.ball.move(pongState.velocity * deltaTime);
+
+                pongState.handleBallCollisions();
+
+                if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds()))) 
+                    pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+                if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+                    pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
+
+                if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
+                    pongState.paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
+                if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
+                    pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));  // TODO что-то сделать с этим безобразием
+
+                
+                if (pongState.ball.getPosition().x < 0) {
+                    pongState.gooool(Right);
+                } else if (pongState.ball.getPosition().x > WINDOW_X) {
+                    pongState.gooool(Left);
                 }
 
-                case sf::Event::KeyPressed: {
-                    switch (event.key.code) {
-                        case sf::Keyboard::Escape: {
-                            if (gameMode != MainMenu) {
-                                if (gameMode == Server || gameMode == Client) {
-                                    serverManager.disconnect();
-                                }
-
-                                gameMode = MainMenu;
-                            } 
-                            break;
-                        }
-                        
-                        case sf::Keyboard::Enter: {
-                            if (gameMode == MainMenu) {
-                                switch (menu.getSelectedItem()) {
-                                    case PlayOffline: {
-                                        gameMode = OfflineGame;
-                                        pongState.reset();
-                                        break;
-                                    }
-
-                                    case LaunchServer: {
-                                        if (serverManager.startServer()) {
-                                            gameMode = Server;
-                                            pongState.reset();
-                                            networkClock.restart();
-                                        } else {
-                                            std::cerr << "Failed to start server!" << std::endl;
-                                        }
-                                        break;
-                                    }
-
-                                    case JoinServer: {
-                                        clientManager.sendConnectionReq(); //TODO Вернуть проверки
-
-                                        gameMode = Client;
-                                        // clock.restart();
-                                        networkClock.restart();
-                                        break;
-                                    }
-
-                                    case Exit: {
-                                        window.close();
-                                        break;
-                                    }
-                                }
-                            } 
-                            break;
-                        }
-
-                        default: {
-                            if (gameMode == MainMenu) {
-                                menu.handleInput(event);
-                            }
-                            break;
-                        }
-                    } 
-                } 
-
-                default: 
-                    break;  
-            }
-        } // TODO РАЗОБРАТЬ ЭТО НА ЧТО-ТО ПОПРОЩЕ, А ТО ЭТО ТРЫНДЕЦ
-
-        window.clear(sf::Color::Black);
-
-        if (gameMode == MainMenu) {
-            menu.draw(window);
-        } else if (gameMode == OfflineGame) {
-            // На одном экране
-            float deltaTime = pongState.getDeltaTime();
-
-            pongState.ball.move(pongState.velocity * deltaTime);
-
-            if (pongState.ballPaddleIntersection()) {
-                pongState.velocity.x = -pongState.velocity.x * 1.05f;
-                //pongState.ball.move(pongState.velocity * deltaTime * 2.0f); 
+                // Отрисовка
+                window.clear(sf::Color::Black);
+                pongState.draw(window);
+                break;
             }
 
+            default:
+                break;
+        }
 
-            if (pongState.ballBorderIntersection()) {
-                pongState.velocity.y = - pongState.velocity.y;
-            }
-
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W))) 
-                pongState.paddle1.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
-                pongState.paddle1.move(sf::Vector2f(0, PaddleSize.x / 2));
-
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
-                pongState.paddle2.move(sf::Vector2f(0, -(PaddleSize.x / 2)));
-            if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
-                pongState.paddle2.move(sf::Vector2f(0, PaddleSize.x / 2));
-
-            
-            if (pongState.ball.getPosition().x < 0) {
-                pongState.gooool(Right);
-            } else if (pongState.ball.getPosition().x > WINDOW_X) {
-                pongState.gooool(Left);
-            }
-
-            // Отрисовка
-            pongState.draw(window);
-
+        if (event.type == sf::Event::Closed) {
+            window.close();
         } 
+
+        
+        // if (window.pollEvent(event)) {
+        //     std::cout << event.key.code << std::endl;   
+        // }
+                  
+        
+        window.display();
+    }
+
+
         // else if (gameMode == Server) {
         //     float deltaTime = clock.restart().asSeconds();
 
@@ -390,9 +338,6 @@ int main() {
         //     // Отрисовка игры
         //     pongState.draw(window);
         // }
-
-        window.display();
-    }
 
     return 0;
 }

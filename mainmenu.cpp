@@ -1,6 +1,8 @@
 #include <SFML/Network.hpp>
+
 #include "mainmenu.hpp"
 #include "constants.hpp"
+#include "pingpong.hpp"
 
 Menu::Menu() {
     font.loadFromFile("pong.ttf");
@@ -35,23 +37,54 @@ void Menu::draw(sf::RenderWindow &window) {
     }
 }
 
-void Menu::handleInput(sf::Event &event) {
+GameMode Menu::handleInput(sf::Event &event, sf::RenderWindow &window) {
     if (event.type == sf::Event::KeyPressed) {
         switch (event.key.code) {
-            case sf::Keyboard::Up:
-            case sf::Keyboard::W:
+            case sf::Keyboard::Up: {
                 moveUp();
                 break;
+            }
 
-            case sf::Keyboard::Down:
-            case sf::Keyboard::S:
+            case sf::Keyboard::Down: {
                 moveDown();
                 break;
-                
-            default:
+            }
+
+            case sf::Keyboard::Enter: {
+                switch (selectedItemIndex) {
+                    case PlayOffline: {
+                        return OfflineGame;
+                        break;
+                    }
+
+                    case LaunchServer: {
+                        return Server;
+                        break;
+                    }
+
+                    case JoinServer: {
+                        return Client;
+                        break;
+                    }
+
+                    case Exit: {
+                        window.close();
+                        break;
+                    }
+
+                    default: {
+                        break;
+                    }
+                }
+            }
+
+            default: {
                 break;
+            }
         }
     }
+
+    return MainMenu;
 }
 
 void Menu::moveUp() {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include "pingpong.hpp"
 
 enum MenuItem {
     PlayOffline,
@@ -17,7 +18,7 @@ class Menu {
         ~Menu();
 
         void draw(sf::RenderWindow &window);
-        void handleInput(sf::Event &event);
+        GameMode handleInput(sf::Event &event, sf::RenderWindow &window);
         int getSelectedItem() const { 
             return selectedItemIndex; 
         }
