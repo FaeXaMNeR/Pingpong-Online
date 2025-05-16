@@ -9,22 +9,21 @@ ServerManager::ServerManager() {
 
 ServerManager::~ServerManager() {}
 
-bool ServerManager::startServer() {
-    if (serverSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done) {
-        std::cerr << "Failed to bind server socket to port" << std::endl;
-        return false;
+void ServerManager::startServer() {
+    if (!isServer) {
+        if (serverSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done) {
+            std::cerr << "Failed to bind server socket to port" << std::endl;
+        }
+        serverPort = serverSocket.getLocalPort();
+        serverAddress = sf::IpAddress::getLocalAddress();
+        isServer = true;
+
+        std::cout << "Your local IP address is " << serverAddress << std::endl;
+        std::cout << "Server started on port " << serverPort << std::endl;
+
+        PlayerInfo host = {serverAddress, serverPort, 0};
+        players.push_back(host);
     }
-    serverPort = serverSocket.getLocalPort();
-    serverAddress = sf::IpAddress::getLocalAddress();
-    isServer = true;
-
-    std::cout << "Your local IP address is " << serverAddress << std::endl;
-    std::cout << "Server started on port " << serverPort << std::endl;
-
-    PlayerInfo host = {serverAddress, serverPort, 0};
-    players.push_back(host);
-
-    return true;
 }
 
 void ClientManager::sendConnectionReq() { // TODO проверки

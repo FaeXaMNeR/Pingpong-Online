@@ -103,7 +103,7 @@ class ServerManager {
         ServerManager();
         ~ServerManager();
 
-        bool startServer();
+        void startServer();
         
         void handleConnectionReq();
         bool connectClient(const sf::IpAddress &address, unsigned short port);

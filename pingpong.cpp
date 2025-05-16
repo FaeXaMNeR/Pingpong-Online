@@ -194,7 +194,6 @@ int main() {
             case OfflineGame: {
                 float deltaTime = pongState.getDeltaTime();
 
-
                 pongState.ball.move(pongState.velocity * deltaTime);
 
                 pongState.handleBallCollisions();
@@ -214,11 +213,19 @@ int main() {
                 } else if (pongState.ball.getPosition().x > WINDOW_X) {
                     pongState.gooool(Left);
                 }
-
-                // Отрисовка
                 
                 pongState.draw(window);
                 break;
+            }
+
+            case Server: {
+                serverManager.startServer();
+                serverManager.handleConnectionReq();
+                break;
+            }
+
+            case Client: {
+                clientManager.sendConnectionReq();
             }
 
             default:
@@ -228,16 +235,9 @@ int main() {
         if (event.type == sf::Event::Closed) {
             window.close();
         } 
-        if (/*event.type == sf::Event::KeyPressed && */event.key.code == sf::Keyboard::Escape) {
-            menu.draw(window);
+        if (event.key.code == sf::Keyboard::Escape) {
             gameMode = MainMenu;
-        }
-
-        
-        if (eventOccured) {
-            std::cout << event.key.code << std::endl;   
-        }
-                  
+        }                  
         
         window.display();
     }
