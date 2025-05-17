@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "pingpong.hpp"
+
 enum PacketType {
     GameStateUpdate,
     PlayerInput,
@@ -31,7 +33,6 @@ struct GameStatePacket {
     sf::Vector2f paddle2Pos;
     int score1;
     int score2;
-    sf::Vector2f velocity;
 };
 
 struct PlayerInputPacket {
@@ -64,26 +65,21 @@ inline sf::Packet& operator << (sf::Packet &packet, const PacketType &type) {
 }
 
 inline sf::Packet& operator << (sf::Packet &packet, const GameStatePacket &state) {
-    return packet << state.type
-                  << state.ballPos.x << state.ballPos.y
-                  << state.paddle1Pos.x << state.paddle1Pos.y
-                  << state.paddle2Pos.x << state.paddle2Pos.y
-                  << state.score1 << state.score2
-                  << state.velocity.x << state.velocity.y; 
+    return packet   << state.type
+                    << state.ballPos.x << state.ballPos.y
+                    << state.paddle1Pos.x << state.paddle1Pos.y
+                    << state.paddle2Pos.x << state.paddle2Pos.y
+                    << state.score1 << state.score2;
 }
 
 inline sf::Packet& operator >> (sf::Packet &packet, GameStatePacket &state) {
-    PacketType receivedType;
-    if (packet >> receivedType && receivedType == GameStateUpdate) {
-        packet >> state.ballPos.x >> state.ballPos.y
-               >> state.paddle1Pos.x >> state.paddle1Pos.y
-               >> state.paddle2Pos.x >> state.paddle2Pos.y
-               >> state.score1 >> state.score2
-               >> state.velocity.x << state.velocity.y;
-    }
+    packet  >> state.ballPos.x >> state.ballPos.y
+            >> state.paddle1Pos.x >> state.paddle1Pos.y
+            >> state.paddle2Pos.x >> state.paddle2Pos.y
+            >> state.score1 >> state.score2;
 
     return packet;
-}      // WARNING Может сломаться
+}
 
 inline sf::Packet& operator << (sf::Packet &packet, const PlayerInputPacket &input) {
     return packet << input.type << input.moveUp << input.moveDown;
@@ -106,7 +102,7 @@ class ServerManager {
         void handleNetworkInput(PlayerInputPacket &input);
         bool connectClient(const sf::IpAddress &address, unsigned short port);
 
-        void sendGameState(const GameStatePacket &state);
+        void sendGameState(const PongState &pongState);
         bool receivePlayerInput(PlayerInputPacket &input);
 
         void drawServerInfo(sf::RenderWindow &window) {
@@ -144,8 +140,11 @@ class ClientManager {
 
         void sendConnectionReq();
         void handleNetworkInput();
+
         void sendPlayerInput(const PlayerInputPacket &input);
         bool receiveGameState(GameStatePacket &state);
+
+        void drawGameState(PongState pongState, sf::RenderWindow &window);
 
         sf::UdpSocket clientSocket;
 
@@ -154,4 +153,6 @@ class ClientManager {
 
         sf::IpAddress serverAddress;
         unsigned short serverPort;
+
+        GameStatePacket gameState;
 };

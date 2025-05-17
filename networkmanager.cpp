@@ -45,9 +45,7 @@ ServerManager::~ServerManager() {
     std::cout << "Disconnected" << std::endl;
 }
 
-void ClientManager::sendConnectionReq() { // TODO проверки
-    
-    
+void ClientManager::sendConnectionReq() { // TODO проверки   
     std::cout << "Enter server address: ";
     std::cin >> serverAddress;
     std::cout << "Enter server port: ";
@@ -102,13 +100,24 @@ void ClientManager::handleNetworkInput() {
 
     if (clientSocket.receive(packet, serverAddress, serverPort) == sf::Socket::Done) {
         packet >> packetType;
+        std::cout << packetType << std::endl;
         switch (packetType) {
+            case GameStateUpdate: {
+
+                packet >> gameState;
+                std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
+                std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
+                std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
+                std::cout << gameState.score1 << std::endl;
+                std::cout << gameState.score2 << std::endl;
+                break;
+            }
             case ConnectionAccept: {
                 std::cout << "The server accepted your connection request!" << std::endl;
                 break;
             }
             case Goodbye: {
-                std::cout << "The server stopped working! Thanks for playing" << std::endl;
+                std::cout << "The server stopped working! Thanks for playing!" << std::endl;
                 break;
             }
             default: {
@@ -118,14 +127,28 @@ void ClientManager::handleNetworkInput() {
     }
 }
 
-// void ServerManager::sendGameState(const GameStatePacket &state) {
-//     if (!isServer_ || !isConnected_ || clientAddress_ == sf::IpAddress::None) return;
+void ServerManager::sendGameState(const PongState &pongState) {
+    sf::Packet packet;
+    GameStatePacket gameState;
+    gameState.type = GameStateUpdate;
+    gameState.ballPos = pongState.ball.getPosition();
+    gameState.paddle1Pos = pongState.paddle1.getPosition();
+    gameState.paddle2Pos = pongState.paddle2.getPosition();
+    gameState.score1 = pongState.intScore1;
+    gameState.score2 = pongState.intScore2;
 
-//     sf::Packet packet;
-//     packet << state;
-
-//     socket_.send(packet, clientAddress_, clientPort_);
-// }
+    std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
+    std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
+    std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
+    std::cout << gameState.score1 << std::endl;
+    std::cout << gameState.score2 << std::endl;
+     
+    packet << gameState;
+    
+    for (size_t i = 1; i < players.size(); i++) {
+        serverSocket.send(packet, players[i].address, players[i].port);
+    }
+}
 
 // bool ServerManager::receivePlayerInput(PlayerInputPacket &input) {
 //     sf::Packet packet;
@@ -176,4 +199,15 @@ ClientManager::ClientManager() {
 
 ClientManager::~ClientManager() {
     
+}
+
+void ClientManager::drawGameState(PongState pongState, sf::RenderWindow &window) {
+    pongState.ball.setPosition(gameState.ballPos); 
+    pongState.paddle1.setPosition(gameState.paddle1Pos);
+    pongState.paddle2.setPosition(gameState.paddle2Pos);
+    pongState.intScore1 = gameState.score1;
+    pongState.intScore2 = gameState.score2;
+    pongState.convertScoreToText();
+    
+    pongState.draw(window);
 }

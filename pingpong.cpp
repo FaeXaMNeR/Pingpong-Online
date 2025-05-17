@@ -41,6 +41,7 @@ int main() {
                           
                         if (event.type == sf::Event::Closed) {
                             window.close();
+                            gameMode = None;
                         }                 
                     }  
                     window.display();
@@ -88,16 +89,27 @@ int main() {
                     
                     pongState.draw(window);
                     window.display();
-                }
+                } 
                 break;
             }
 
             case Server: {
                 ServerManager serverManager;
                 PlayerInputPacket input;
-                
                 while (gameMode == Server) {
                     serverManager.handleNetworkInput(input);
+
+                    pongState.ball.move(pongState.velocity * pongState.getDeltaTime());
+
+                    pongState.handleBallCollisions();
+
+                    if (pongState.ball.getPosition().x < 0) {
+                        pongState.gooool(Right);
+                    } else if (pongState.ball.getPosition().x > WINDOW_X) {
+                        pongState.gooool(Left);
+                    }
+
+                    serverManager.sendGameState(pongState);
 
                     window.pollEvent(event);
                     if (event.type == sf::Event::Closed) {
@@ -119,7 +131,7 @@ int main() {
                 ClientManager clientManager;
                 clientManager.sendConnectionReq();
                 while (gameMode == Client) {
-                    clientManager.handleNetworkInput();
+                    clientManager.handleNetworkInput();                    
                     
                     window.pollEvent(event);
                     if (event.type == sf::Event::Closed) {
@@ -130,7 +142,8 @@ int main() {
                         gameMode = MainMenu;
                     }
 
-                    
+                    clientManager.drawGameState(pongState, window);
+                    window.display();
                 }
             }
 
