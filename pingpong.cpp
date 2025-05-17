@@ -131,9 +131,11 @@ int main() {
                 ClientManager clientManager;
                 clientManager.sendConnectionReq();
                 while (gameMode == Client) {
-                    clientManager.handleNetworkInput();                    
-                    
                     window.pollEvent(event);
+                    clientManager.handleLobby(window, event);
+                    // clientManager.handleNetworkInput();                    
+                    
+                    
                     if (event.type == sf::Event::Closed) {
                         gameMode = None;
                         window.close();
@@ -142,7 +144,7 @@ int main() {
                         gameMode = MainMenu;
                     }
 
-                    clientManager.drawGameState(pongState, window);
+                    // clientManager.drawGameState(pongState, window);
                     window.display();
                 }
             }
