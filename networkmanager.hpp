@@ -83,7 +83,7 @@ inline sf::Packet& operator >> (sf::Packet &packet, GameStatePacket &state) {
     }
 
     return packet;
-}
+}      // WARNING Может сломаться
 
 inline sf::Packet& operator << (sf::Packet &packet, const PlayerInputPacket &input) {
     return packet << input.type << input.moveUp << input.moveDown;
@@ -96,7 +96,7 @@ inline sf::Packet &operator >> (sf::Packet &packet, PlayerInputPacket &input) {
     }
 
     return packet;
-}
+}       // WARNING Может сломаться
 
 class ServerManager {
     public:
@@ -130,8 +130,6 @@ class ServerManager {
         sf::IpAddress serverAddress;
         unsigned short serverPort;
 
-        bool isServer = false;
-
         std::vector<PlayerInfo> players;
 };
 
@@ -152,6 +150,4 @@ class ClientManager {
 
         sf::IpAddress serverAddress;
         unsigned short serverPort;
-
-        bool isClient = false;
 };

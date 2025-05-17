@@ -169,8 +169,7 @@ int main() {
     pongState.setTheGame();
 
     GameMode gameMode = MainMenu;
-    ServerManager serverManager;
-    ClientManager clientManager;
+    
     sf::Clock networkClock;
     sf::Clock clientInputClock;
 
@@ -242,7 +241,7 @@ int main() {
             }
 
             case Server: {
-                serverManager.startServer();
+                ServerManager serverManager;
                 PlayerInputPacket input;
                 while (gameMode == Server) {
                     serverManager.handleNetworkInput(input);
@@ -255,11 +254,11 @@ int main() {
                         gameMode = MainMenu;
                     } 
                 }
-                serverManager.disconnect();
                 break;
             }
 
             case Client: {
+                ClientManager clientManager;
                 clientManager.sendConnectionReq();
                 while (gameMode == Client) {
                     clientManager.handleNetworkInput();
