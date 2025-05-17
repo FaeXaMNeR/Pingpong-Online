@@ -198,9 +198,7 @@ int main() {
 
             case OfflineGame: {
                 while (gameMode == OfflineGame) {
-                    float deltaTime = pongState.getDeltaTime();
-
-                    pongState.ball.move(pongState.velocity * deltaTime);
+                    pongState.ball.move(pongState.velocity * pongState.getDeltaTime());
 
                     pongState.handleBallCollisions();
 
@@ -245,6 +243,7 @@ int main() {
                 PlayerInputPacket input;
                 while (gameMode == Server) {
                     serverManager.handleNetworkInput(input);
+                    
 
                     window.pollEvent(event);
                     if (event.type == sf::Event::Closed) {
@@ -262,13 +261,14 @@ int main() {
                 clientManager.sendConnectionReq();
                 while (gameMode == Client) {
                     clientManager.handleNetworkInput();
+                    
                     window.pollEvent(event);
                     if (event.type == sf::Event::Closed) {
                         window.close();
-                    } 
+                    }
                     if (event.key.code == sf::Keyboard::Escape) {
                         gameMode = MainMenu;
-                    } 
+                    }
                 }
             }
 
@@ -287,7 +287,7 @@ int main() {
     }
 
 
-        // if (gameMode == Server) {
+        // if (gameMode == Server) {42263
         //     float deltaTime = clock.restart().asSeconds();
 
         //     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
@@ -362,7 +362,7 @@ int main() {
 
         //     // Отрисовка игры
         //     pongState.draw(window);
-        // }
+        // // }
 
     return 0;
 }

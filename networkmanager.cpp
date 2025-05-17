@@ -4,7 +4,7 @@
 #include "networkmanager.hpp"
 
 ServerManager::ServerManager() {
-    serverSocket.setBlocking(false);  // ?
+    serverSocket.setBlocking(false);
     
     while (serverSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done) {
         std::cerr << "Failed to bind server socket to port" << std::endl;
@@ -21,6 +21,12 @@ ServerManager::ServerManager() {
 }
 
 ServerManager::~ServerManager() {
+    sf::Packet packet;
+    packet << Goodbye;
+    for (size_t i = 1; i < players.size(); i++) {
+        serverSocket.send(packet, players[i].address, players[i].port);
+    }
+    
     serverSocket.unbind();
     serverAddress = sf::IpAddress::None;
     serverPort = 0;
@@ -73,18 +79,9 @@ void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
             default: {
                 break;
             }
-        }
-        
-        
+        }  
     }
-}
-
-void ServerManager::disconnect() {
-    serverSocket.unbind();
-
-    players.clear();
     
-    std::cout << "Disconnected" << std::endl;
 }
 
 void ClientManager::handleNetworkInput() {
@@ -96,6 +93,11 @@ void ClientManager::handleNetworkInput() {
         switch (packetType) {
             case ConnectionAccept: {
                 std::cout << "The server accepted your connection request!" << std::endl;
+                break;
+            }
+            case Goodbye: {
+                std::cout << "The server stopped working! Thanks for playing" << std::endl;
+                break;
             }
             default: {
                 break;
@@ -157,7 +159,7 @@ void ClientManager::handleNetworkInput() {
 // }
 
 ClientManager::ClientManager() {
-    
+    clientSocket.setBlocking(false);
 }
 
 ClientManager::~ClientManager() {

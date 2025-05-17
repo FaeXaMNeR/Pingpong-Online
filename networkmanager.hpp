@@ -15,7 +15,7 @@ enum PacketType {
     RoomConnectionReq,
 
     GameStart,
-    PlayerDisconnect
+    Goodbye
 };
 
 struct PlayerInfo {
@@ -102,12 +102,9 @@ class ServerManager {
     public:
         ServerManager();
         ~ServerManager();
-
-        void startServer();
         
         void handleNetworkInput(PlayerInputPacket &input);
         bool connectClient(const sf::IpAddress &address, unsigned short port);
-        void disconnect();
 
         void sendGameState(const GameStatePacket &state);
         bool receivePlayerInput(PlayerInputPacket &input);
