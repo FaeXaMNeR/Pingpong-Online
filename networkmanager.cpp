@@ -1,7 +1,9 @@
 #include <iostream>
 #include <cassert>
+#include <SFML/Graphics.hpp>
 
 #include "networkmanager.hpp"
+#include "constants.hpp"
 
 ServerManager::ServerManager() {
     serverSocket.setBlocking(false);
@@ -18,6 +20,14 @@ ServerManager::ServerManager() {
 
     PlayerInfo host = {serverAddress, serverPort, 0};
     players.push_back(host);
+
+    font.loadFromFile("pong.ttf");    
+    serverInfoText.setFont(font);
+    serverInfoText.setFillColor(sf::Color::White);
+    serverInfoText.setCharacterSize(WINDOW_Y / 30);
+    serverInfoText.setPosition(sf::Vector2f(WINDOW_X / 2 + 20, WINDOW_Y / 60));
+    serverInfoText.setString("Server IP: " + serverAddress.toString() + 
+                             "\nServer port: " + std::to_string(serverPort));
 }
 
 ServerManager::~ServerManager() {
@@ -36,6 +46,8 @@ ServerManager::~ServerManager() {
 }
 
 void ClientManager::sendConnectionReq() { // TODO проверки
+    
+    
     std::cout << "Enter server address: ";
     std::cin >> serverAddress;
     std::cout << "Enter server port: ";

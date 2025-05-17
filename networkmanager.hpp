@@ -109,6 +109,10 @@ class ServerManager {
         void sendGameState(const GameStatePacket &state);
         bool receivePlayerInput(PlayerInputPacket &input);
 
+        void drawServerInfo(sf::RenderWindow &window) {
+            window.draw(serverInfoText);
+        }
+
         // bool isServer() const {
         //     return isServer_;
         // }
@@ -128,6 +132,9 @@ class ServerManager {
         unsigned short serverPort;
 
         std::vector<PlayerInfo> players;
+
+        sf::Text serverInfoText;
+        sf::Font font;
 };
 
 class ClientManager {

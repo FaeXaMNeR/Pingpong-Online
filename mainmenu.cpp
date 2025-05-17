@@ -13,17 +13,17 @@ Menu::Menu() {
         menu[i].setCharacterSize(WINDOW_Y / 30);
     }
 
-    menu[PlayOffline].setString("Play Offline");
-    menu[PlayOffline].setPosition(sf::Vector2f(WINDOW_X / 10, 1 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
+    menu[PlayOffline    ].setString("Play Offline");
+    menu[PlayOffline    ].setPosition(sf::Vector2f(WINDOW_X / 10, 1 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
     
-    menu[LaunchServer].setString("Launch Server");
-    menu[LaunchServer].setPosition(sf::Vector2f(WINDOW_X / 10, 2 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
+    menu[LaunchServer   ].setString("Launch Server");
+    menu[LaunchServer   ].setPosition(sf::Vector2f(WINDOW_X / 10, 2 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
-    menu[JoinServer].setString("Join Server");
-    menu[JoinServer].setPosition(sf::Vector2f(WINDOW_X / 10, 3 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
+    menu[JoinServer     ].setString("Join Server");
+    menu[JoinServer     ].setPosition(sf::Vector2f(WINDOW_X / 10, 3 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
-    menu[Exit].setString("Exit");
-    menu[Exit].setPosition(sf::Vector2f(WINDOW_X / 10, 4 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
+    menu[Exit           ].setString("Exit");
+    menu[Exit           ].setPosition(sf::Vector2f(WINDOW_X / 10, 4 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
     menu[PlayOffline].setFillColor(sf::Color::White); // Выбранный пункт по умолчанию
     selectedItemIndex = 0;
