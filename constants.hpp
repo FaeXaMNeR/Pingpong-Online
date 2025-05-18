@@ -10,4 +10,6 @@ const int BallRad = WINDOW_Y * 2 / 300;
 const int PADDLE_X = WINDOW_X / 160;
 const int PADDLE_Y = WINDOW_Y * 2 / 30;
 
+const int NUM_OF_ROOMS = 5;
+
 const float TICK_RATE = 120.f;

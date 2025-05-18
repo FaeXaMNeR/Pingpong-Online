@@ -15,6 +15,7 @@ enum PacketType {
     ConnectionAccept,
 
     RoomConnectionReq,
+    RoomsInfo,
 
     GameStart,
     Goodbye
@@ -23,7 +24,14 @@ enum PacketType {
 struct PlayerInfo {
     sf::IpAddress address;
     unsigned short port;
-    long unsigned playerId;
+    unsigned long playerId;
+};
+
+struct RoomInfo {
+    // PongState roomGameState;
+    long player1Id;
+    long player2Id;
+    bool isAvailable;
 };
 
 struct GameStatePacket {
@@ -42,13 +50,17 @@ struct PlayerInputPacket {
 };
 
 struct AcceptionPacket {
-    PacketType type = ConnectionAccept;
-    
+    PacketType type = ConnectionAccept;   
 };
 
 struct GameStartPacket {
     PacketType type = GameStart;
     int assignedPlayerId;
+};
+
+struct RoomsInfoPacket {
+    PacketType type = RoomsInfo;
+    std::vector<bool> roomAvailability;
 };
 
 inline sf::Packet& operator >> (sf::Packet &packet, PacketType &type) {
@@ -94,6 +106,25 @@ inline sf::Packet &operator >> (sf::Packet &packet, PlayerInputPacket &input) {
     return packet;
 }       // WARNING Может сломаться
 
+inline sf::Packet& operator >> (sf::Packet &packet, RoomsInfoPacket &roomsInfo) {
+    bool temp;
+    while(!packet.endOfPacket()) {
+        packet >> temp;
+        roomsInfo.roomAvailability.push_back(temp);
+    }
+
+    return packet;
+}
+
+inline sf::Packet& operator << (sf::Packet &packet, std::vector<RoomInfo> rooms) {
+    packet << RoomsInfo;
+    for (size_t i = 0; i < rooms.size(); i++) {
+        packet << rooms[i].isAvailable;
+    }
+
+    return packet;
+}
+
 class ServerManager {
     public:
         ServerManager();
@@ -109,25 +140,14 @@ class ServerManager {
             window.draw(serverInfoText);
         }
 
-        // bool isServer() const {
-        //     return isServer_;
-        // }
-        // bool isClient() const {
-        //     return isClient_;
-        // }
-        // bool isConnected() const {
-        //     return isConnected_;
-        // }
-        // bool hasClient() const {
-        //     return clientAddress_ != sf::IpAddress::None;
-        // }
-
     private:
         sf::UdpSocket serverSocket;
         sf::IpAddress serverAddress;
         unsigned short serverPort;
 
         std::vector<PlayerInfo> players;
+        std::vector<RoomInfo> rooms;
+        
 
         sf::Text serverInfoText;
         sf::Font font;
@@ -138,7 +158,7 @@ class ClientManager {
         ClientManager();
         ~ClientManager();
 
-        void sendConnectionReq();
+        void sendConnectionReq(sf::RenderWindow &window);
         void handleNetworkInput();
 
         void sendPlayerInput(const PlayerInputPacket &input);
@@ -155,4 +175,6 @@ class ClientManager {
         unsigned short serverPort;
 
         GameStatePacket gameState;
+
+        sf::Font font;
 };

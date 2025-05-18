@@ -21,6 +21,11 @@ ServerManager::ServerManager() {
     PlayerInfo host = {serverAddress, serverPort, 0};
     players.push_back(host);
 
+    for (size_t i = 0; i < NUM_OF_ROOMS; i++) {
+        RoomInfo room = {-1, -1, true};
+        rooms.push_back(room);
+    }
+
     font.loadFromFile("pong.ttf");    
     serverInfoText.setFont(font);
     serverInfoText.setFillColor(sf::Color::White);
@@ -45,7 +50,20 @@ ServerManager::~ServerManager() {
     std::cout << "Disconnected" << std::endl;
 }
 
-void ClientManager::sendConnectionReq() { // TODO проверки   
+void ClientManager::sendConnectionReq(sf::RenderWindow &window) { // TODO проверки   
+    sf::Text checkTerminalText;
+    font.loadFromFile("pong.ttf");
+    checkTerminalText.setString("Please, check your terminal");
+    checkTerminalText.setFont(font);
+    checkTerminalText.setFillColor(sf::Color::White);
+    checkTerminalText.setPosition(WINDOW_X / 10, WINDOW_Y / 2 - WINDOW_Y / 15);
+    checkTerminalText.setCharacterSize(WINDOW_Y / 15);
+
+    window.clear(sf::Color::Black);
+    window.draw(checkTerminalText);
+    window.display();
+    
+    
     std::cout << "Enter server address: ";
     std::cin >> serverAddress;
     std::cout << "Enter server port: ";
@@ -80,6 +98,10 @@ void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
                 players.push_back(newPlayer);
                 outputPacket << ConnectionAccept;
                 serverSocket.send(outputPacket, clientAddress, clientPort);
+
+                outputPacket.clear();
+                outputPacket << rooms;
+                serverSocket.send(outputPacket, clientAddress, clientPort);
                 break;
             }
             case PlayerInput: {
@@ -100,20 +122,32 @@ void ClientManager::handleNetworkInput() {
 
     if (clientSocket.receive(packet, serverAddress, serverPort) == sf::Socket::Done) {
         packet >> packetType;
-        std::cout << packetType << std::endl;
         switch (packetType) {
             case GameStateUpdate: {
 
                 packet >> gameState;
-                std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
-                std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
-                std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
-                std::cout << gameState.score1 << std::endl;
-                std::cout << gameState.score2 << std::endl;
+                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
+                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
+                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
+                // std::cout << gameState.score1 << std::endl;
+                // std::cout << gameState.score2 << std::endl;
                 break;
             }
             case ConnectionAccept: {
                 std::cout << "The server accepted your connection request!" << std::endl;
+                break;
+            }
+            case RoomsInfo: {
+                RoomsInfoPacket roomsInformation;
+                packet >> roomsInformation;
+                std::cout << "Here are all the rooms: " << std::endl;
+                for (size_t i = 0; i < roomsInformation.roomAvailability.size(); i++) {
+                    if (roomsInformation.roomAvailability[i]) {
+                        std::cout << i << ": Availible" << std::endl;
+                    } else {
+                        std::cout << i << ": Occupied" << std::endl;
+                    }
+                }
                 break;
             }
             case Goodbye: {
@@ -137,17 +171,17 @@ void ServerManager::sendGameState(const PongState &pongState) {
     gameState.score1 = pongState.intScore1;
     gameState.score2 = pongState.intScore2;
 
-    std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
-    std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
-    std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
-    std::cout << gameState.score1 << std::endl;
-    std::cout << gameState.score2 << std::endl;
+    // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
+    // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
+    // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
+    // std::cout << gameState.score1 << std::endl;
+    // std::cout << gameState.score2 << std::endl;
      
     packet << gameState;
-    
+
     for (size_t i = 1; i < players.size(); i++) {
         serverSocket.send(packet, players[i].address, players[i].port);
-    }
+    }   
 }
 
 // bool ServerManager::receivePlayerInput(PlayerInputPacket &input) {

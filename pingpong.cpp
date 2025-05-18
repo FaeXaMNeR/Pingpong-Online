@@ -129,7 +129,7 @@ int main() {
 
             case Client: {
                 ClientManager clientManager;
-                clientManager.sendConnectionReq();
+                clientManager.sendConnectionReq(window);
                 while (gameMode == Client) {
                     clientManager.handleNetworkInput();                    
                     
@@ -162,7 +162,7 @@ int main() {
     }
 
 
-        // if (gameMode == Server) {42263
+        // if (gameMode == Server) {
         //     float deltaTime = clock.restart().asSeconds();
 
         //     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !(pongState.paddle1.getGlobalBounds().intersects(pongState.topBorder.getGlobalBounds())))
