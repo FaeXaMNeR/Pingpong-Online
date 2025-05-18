@@ -139,7 +139,6 @@ class ClientManager {
         ~ClientManager();
 
         void sendConnectionReq();
-        void handleLobby(sf::RenderWindow &window, sf::Event &event);
         void handleNetworkInput();
 
         void sendPlayerInput(const PlayerInputPacket &input);
@@ -156,7 +155,4 @@ class ClientManager {
         unsigned short serverPort;
 
         GameStatePacket gameState;
-
-        sf::Text lobbyText;
-        sf::Font font;
 };

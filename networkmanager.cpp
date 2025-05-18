@@ -46,19 +46,19 @@ ServerManager::~ServerManager() {
 }
 
 void ClientManager::sendConnectionReq() { // TODO проверки   
-    // std::cout << "Enter server address: ";
-    // std::cin >> serverAddress;
-    // std::cout << "Enter server port: ";
-    // std::cin >> serverPort;
+    std::cout << "Enter server address: ";
+    std::cin >> serverAddress;
+    std::cout << "Enter server port: ";
+    std::cin >> serverPort;
     
-    // sf::Packet packet;
-    // packet << ConnectionRequest;
+    sf::Packet packet;
+    packet << ConnectionRequest;
 
-    // std::cout << "Sending connection request to " << serverAddress << " using port " << serverPort << std::endl;
+    std::cout << "Sending connection request to " << serverAddress << " using port " << serverPort << std::endl;
 
-    // if (clientSocket.send(packet, serverAddress, serverPort) != sf::Socket::Done) {
-    //     std::cerr << "Failed to send connection request" << std::endl;
-    // }
+    if (clientSocket.send(packet, serverAddress, serverPort) != sf::Socket::Done) {
+        std::cerr << "Failed to send connection request" << std::endl;
+    }
 }
 
 void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
@@ -100,16 +100,16 @@ void ClientManager::handleNetworkInput() {
 
     if (clientSocket.receive(packet, serverAddress, serverPort) == sf::Socket::Done) {
         packet >> packetType;
-        //std::cout << packetType << std::endl;
+        std::cout << packetType << std::endl;
         switch (packetType) {
             case GameStateUpdate: {
 
                 packet >> gameState;
-                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
-                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
-                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
-                // std::cout << gameState.score1 << std::endl;
-                // std::cout << gameState.score2 << std::endl;
+                std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
+                std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
+                std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
+                std::cout << gameState.score1 << std::endl;
+                std::cout << gameState.score2 << std::endl;
                 break;
             }
             case ConnectionAccept: {
@@ -137,11 +137,11 @@ void ServerManager::sendGameState(const PongState &pongState) {
     gameState.score1 = pongState.intScore1;
     gameState.score2 = pongState.intScore2;
 
-    // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
-    // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
-    // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
-    // std::cout << gameState.score1 << std::endl;
-    // std::cout << gameState.score2 << std::endl;
+    std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
+    std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
+    std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
+    std::cout << gameState.score1 << std::endl;
+    std::cout << gameState.score2 << std::endl;
      
     packet << gameState;
     
@@ -195,12 +195,6 @@ void ServerManager::sendGameState(const PongState &pongState) {
 
 ClientManager::ClientManager() {
     clientSocket.setBlocking(false);
-
-    font.loadFromFile("pong.ttf");
-    lobbyText.setFont(font);
-    lobbyText.setFillColor(sf::Color::White);
-    lobbyText.setCharacterSize(WINDOW_Y / 30);
-    lobbyText.setPosition(sf::Vector2f(WINDOW_Y / 45, WINDOW_Y / 60));
 }
 
 ClientManager::~ClientManager() {
@@ -216,25 +210,4 @@ void ClientManager::drawGameState(PongState pongState, sf::RenderWindow &window)
     pongState.convertScoreToText();
     
     pongState.draw(window);
-}
-
-void ClientManager::handleLobby(sf::RenderWindow &window, sf::Event &event) {
-    static sf::String IpAddressText;
-    lobbyText.setString("Server IP: " + IpAddressText);
-    
-    window.clear(sf::Color::Black);
-    if (event.type == sf::Event::KeyPressed) {
-        if ((sf::Keyboard::Num0 <= event.key.code && event.key.code <= sf::Keyboard::Num9)
-            || event.key.code == sf::Keyboard::Period) {
-            IpAddressText += sf::Keyboard::getDescription(event.key.scancode);
-        }
-        if (event.key.code == sf::Keyboard::BackSpace && IpAddressText.getSize() > 0) {
-            IpAddressText.erase(IpAddressText.getSize() - 1, 1);
-        }
-        if (event.key.code == sf::Keyboard::Enter) {
-            serverAddress = sf::IpAddress(IpAddressText);
-        }
-    }
-    
-    window.draw(lobbyText);
 }
