@@ -37,6 +37,8 @@ ServerManager::ServerManager() {
     serverInfoText.setPosition(sf::Vector2f(WINDOW_X / 2 + 20, WINDOW_Y / 60));
     serverInfoText.setString("Server IP: " + serverAddress.toString() + 
                              "\nServer port: " + std::to_string(serverPort));
+
+    networkClock.restart();
 }
 
 ServerManager::~ServerManager() {
@@ -120,24 +122,29 @@ void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
 void ServerManager::sendGameState(const PongState &pongState) {
     sf::Packet packet;
     GameStatePacket gameState;
-    gameState.type = GameStateUpdate;
-    gameState.ballPos = pongState.ball.getPosition();
-    gameState.paddle1Pos = pongState.paddle1.getPosition();
-    gameState.paddle2Pos = pongState.paddle2.getPosition();
-    gameState.score1 = pongState.intScore1;
-    gameState.score2 = pongState.intScore2;
+    if (networkClock.getElapsedTime().asSeconds() >= FIXED_TIME_STEP) {
+        gameState.type = GameStateUpdate;
+        gameState.ballPos = pongState.ball.getPosition();
+        gameState.paddle1Pos = pongState.paddle1.getPosition();
+        gameState.paddle2Pos = pongState.paddle2.getPosition();
+        gameState.score1 = pongState.intScore1;
+        gameState.score2 = pongState.intScore2;
 
-    // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
-    // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
-    // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
-    // std::cout << gameState.score1 << std::endl;
-    // std::cout << gameState.score2 << std::endl;
+        std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+        std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+        std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+        std::cout << gameState.score1 << std::endl;
+        std::cout << gameState.score2 << std::endl;
 
-    packet << gameState;
+        packet << gameState;
 
-    for (size_t i = 1; i < players.size(); i++) {
-        serverSocket.send(packet, players[i].address, players[i].port);
+        for (size_t i = 1; i < players.size(); i++) {
+            serverSocket.send(packet, players[i].address, players[i].port);
+        }
+        networkClock.restart();
     }
+
+    
 }
 
 // void ServerManager::runRooms() {
@@ -223,7 +230,6 @@ void ClientManager::sendConnectionReq(sf::RenderWindow &window) { // TODO про
     window.draw(checkTerminalText);
     window.display();
     
-    
     std::cout << "Enter server address: ";
     std::cin >> serverAddress;
     std::cout << "Enter server port: ";
@@ -249,11 +255,11 @@ void ClientManager::handleNetworkInput() {
         switch (packetType) {
             case GameStateUpdate: {
                 inputPacket >> gameState;
-                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
-                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
-                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
-                // std::cout << gameState.score1 << std::endl;
-                // std::cout << gameState.score2 << std::endl;
+                std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+                std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+                std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+                std::cout << gameState.score1 << std::endl;
+                std::cout << gameState.score2 << std::endl;
                 break;
             }
             case ConnectionAccept: {

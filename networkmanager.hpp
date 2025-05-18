@@ -85,6 +85,7 @@ class ServerManager {
         std::vector<PlayerInfo> players;
         std::vector<RoomInfo> rooms;
         
+        sf::Clock networkClock;
 
         sf::Text serverInfoText;
         sf::Font font;

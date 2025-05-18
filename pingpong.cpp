@@ -131,7 +131,7 @@ int main() {
                 ClientManager clientManager;
                 clientManager.sendConnectionReq(window);
                 while (gameMode == Client) {
-                    clientManager.handleNetworkInput();                    
+                    clientManager.handleNetworkInput();
                     
                     window.pollEvent(event);
                     if (event.type == sf::Event::Closed) {

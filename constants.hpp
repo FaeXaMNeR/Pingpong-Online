@@ -12,4 +12,4 @@ const int PADDLE_Y = WINDOW_Y * 2 / 30;
 
 const int NUM_OF_ROOMS = 5;
 
-const float TICK_RATE = 120.f;
+const float FIXED_TIME_STEP = 1. / 60.;
