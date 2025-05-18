@@ -28,7 +28,7 @@ struct PlayerInfo {
 };
 
 struct RoomInfo {
-    // PongState roomGameState;
+    PongState roomGameState;
     long player1Id;
     long player2Id;
     bool isAvailable;
@@ -71,6 +71,62 @@ inline sf::Packet& operator >> (sf::Packet &packet, PacketType &type) {
 
     return packet;
 }
+
+class ServerManager {
+    public:
+        ServerManager();
+        ~ServerManager();
+        
+        void handleNetworkInput(PlayerInputPacket &input);
+        bool connectClient(const sf::IpAddress &address, unsigned short port);
+
+        void runRooms();
+
+        void sendGameState(const PongState &pongState);
+        bool receivePlayerInput(PlayerInputPacket &input);
+
+        void drawServerInfo(sf::RenderWindow &window) {
+            window.draw(serverInfoText);
+        }
+
+    private:
+        sf::UdpSocket serverSocket;
+        sf::IpAddress serverAddress;
+        unsigned short serverPort;
+
+        std::vector<PlayerInfo> players;
+        std::vector<RoomInfo> rooms;
+        
+
+        sf::Text serverInfoText;
+        sf::Font font;
+};
+
+class ClientManager {
+    public:
+        ClientManager();
+        ~ClientManager();
+
+        void sendConnectionReq(sf::RenderWindow &window);
+        void handleNetworkInput();
+
+        void sendPlayerInput(const PlayerInputPacket &input);
+        bool receiveGameState(GameStatePacket &state);
+
+        void drawGameState(PongState pongState, sf::RenderWindow &window);
+
+        sf::UdpSocket clientSocket;
+
+        sf::IpAddress clientAddress;
+        unsigned short clientPort;
+
+        sf::IpAddress serverAddress;
+        unsigned short serverPort;
+
+        GameStatePacket gameState;
+
+        sf::Font font;
+};
 
 inline sf::Packet& operator << (sf::Packet &packet, const PacketType &type) {
     return packet << static_cast<sf::Int32>(type);
@@ -124,57 +180,3 @@ inline sf::Packet& operator << (sf::Packet &packet, std::vector<RoomInfo> rooms)
 
     return packet;
 }
-
-class ServerManager {
-    public:
-        ServerManager();
-        ~ServerManager();
-        
-        void handleNetworkInput(PlayerInputPacket &input);
-        bool connectClient(const sf::IpAddress &address, unsigned short port);
-
-        void sendGameState(const PongState &pongState);
-        bool receivePlayerInput(PlayerInputPacket &input);
-
-        void drawServerInfo(sf::RenderWindow &window) {
-            window.draw(serverInfoText);
-        }
-
-    private:
-        sf::UdpSocket serverSocket;
-        sf::IpAddress serverAddress;
-        unsigned short serverPort;
-
-        std::vector<PlayerInfo> players;
-        std::vector<RoomInfo> rooms;
-        
-
-        sf::Text serverInfoText;
-        sf::Font font;
-};
-
-class ClientManager {
-    public:
-        ClientManager();
-        ~ClientManager();
-
-        void sendConnectionReq(sf::RenderWindow &window);
-        void handleNetworkInput();
-
-        void sendPlayerInput(const PlayerInputPacket &input);
-        bool receiveGameState(GameStatePacket &state);
-
-        void drawGameState(PongState pongState, sf::RenderWindow &window);
-
-        sf::UdpSocket clientSocket;
-
-        sf::IpAddress clientAddress;
-        unsigned short clientPort;
-
-        sf::IpAddress serverAddress;
-        unsigned short serverPort;
-
-        GameStatePacket gameState;
-
-        sf::Font font;
-};

@@ -22,9 +22,13 @@ ServerManager::ServerManager() {
     players.push_back(host);
 
     for (size_t i = 0; i < NUM_OF_ROOMS; i++) {
-        RoomInfo room = {-1, -1, true};
+        RoomInfo room;
+        room.player1Id = -1;
+        room.player2Id = -1;
+        room.isAvailable = true;
         rooms.push_back(room);
     }
+    rooms[0].player1Id = 0;
 
     font.loadFromFile("pong.ttf");    
     serverInfoText.setFont(font);
@@ -48,35 +52,6 @@ ServerManager::~ServerManager() {
     players.clear();
     
     std::cout << "Disconnected" << std::endl;
-}
-
-void ClientManager::sendConnectionReq(sf::RenderWindow &window) { // TODO проверки   
-    sf::Text checkTerminalText;
-    font.loadFromFile("pong.ttf");
-    checkTerminalText.setString("Please, check your terminal");
-    checkTerminalText.setFont(font);
-    checkTerminalText.setFillColor(sf::Color::White);
-    checkTerminalText.setPosition(WINDOW_X / 10, WINDOW_Y / 2 - WINDOW_Y / 15);
-    checkTerminalText.setCharacterSize(WINDOW_Y / 15);
-
-    window.clear(sf::Color::Black);
-    window.draw(checkTerminalText);
-    window.display();
-    
-    
-    std::cout << "Enter server address: ";
-    std::cin >> serverAddress;
-    std::cout << "Enter server port: ";
-    std::cin >> serverPort;
-    
-    sf::Packet packet;
-    packet << ConnectionRequest;
-
-    std::cout << "Sending connection request to " << serverAddress << " using port " << serverPort << std::endl;
-
-    if (clientSocket.send(packet, serverAddress, serverPort) != sf::Socket::Done) {
-        std::cerr << "Failed to send connection request" << std::endl;
-    }
 }
 
 void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
@@ -113,52 +88,6 @@ void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
             }
         }  
     }
-    
-}
-
-void ClientManager::handleNetworkInput() {
-    sf::Packet packet;
-    PacketType packetType;
-
-    if (clientSocket.receive(packet, serverAddress, serverPort) == sf::Socket::Done) {
-        packet >> packetType;
-        switch (packetType) {
-            case GameStateUpdate: {
-
-                packet >> gameState;
-                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
-                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
-                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
-                // std::cout << gameState.score1 << std::endl;
-                // std::cout << gameState.score2 << std::endl;
-                break;
-            }
-            case ConnectionAccept: {
-                std::cout << "The server accepted your connection request!" << std::endl;
-                break;
-            }
-            case RoomsInfo: {
-                RoomsInfoPacket roomsInformation;
-                packet >> roomsInformation;
-                std::cout << "Here are all the rooms: " << std::endl;
-                for (size_t i = 0; i < roomsInformation.roomAvailability.size(); i++) {
-                    if (roomsInformation.roomAvailability[i]) {
-                        std::cout << i << ": Availible" << std::endl;
-                    } else {
-                        std::cout << i << ": Occupied" << std::endl;
-                    }
-                }
-                break;
-            }
-            case Goodbye: {
-                std::cout << "The server stopped working! Thanks for playing!" << std::endl;
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
 }
 
 void ServerManager::sendGameState(const PongState &pongState) {
@@ -183,6 +112,14 @@ void ServerManager::sendGameState(const PongState &pongState) {
         serverSocket.send(packet, players[i].address, players[i].port);
     }   
 }
+
+// void ServerManager::runRooms() {
+//     for (size_t i = 0; i < rooms.size(); i++) {
+//         if (rooms[i].player1Id != -1 && rooms[i].player2Id != -1) {
+
+//         }
+//     }
+// }
 
 // bool ServerManager::receivePlayerInput(PlayerInputPacket &input) {
 //     sf::Packet packet;
@@ -244,4 +181,78 @@ void ClientManager::drawGameState(PongState pongState, sf::RenderWindow &window)
     pongState.convertScoreToText();
     
     pongState.draw(window);
+}
+
+void ClientManager::sendConnectionReq(sf::RenderWindow &window) { // TODO проверки   
+    sf::Text checkTerminalText;
+    font.loadFromFile("pong.ttf");
+    checkTerminalText.setString("Please, check your terminal");
+    checkTerminalText.setFont(font);
+    checkTerminalText.setFillColor(sf::Color::White);
+    checkTerminalText.setPosition(WINDOW_X / 10, WINDOW_Y / 2 - WINDOW_Y / 15);
+    checkTerminalText.setCharacterSize(WINDOW_Y / 15);
+
+    window.clear(sf::Color::Black);
+    window.draw(checkTerminalText);
+    window.display();
+    
+    
+    std::cout << "Enter server address: ";
+    std::cin >> serverAddress;
+    std::cout << "Enter server port: ";
+    std::cin >> serverPort;
+    
+    sf::Packet packet;
+    packet << ConnectionRequest;
+
+    std::cout << "Sending connection request to " << serverAddress << " using port " << serverPort << std::endl;
+
+    if (clientSocket.send(packet, serverAddress, serverPort) != sf::Socket::Done) {
+        std::cerr << "Failed to send connection request" << std::endl;
+    }
+}
+
+void ClientManager::handleNetworkInput() {
+    sf::Packet packet;
+    PacketType packetType;
+
+    if (clientSocket.receive(packet, serverAddress, serverPort) == sf::Socket::Done) {
+        packet >> packetType;
+        switch (packetType) {
+            case GameStateUpdate: {
+
+                packet >> gameState;
+                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
+                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
+                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
+                // std::cout << gameState.score1 << std::endl;
+                // std::cout << gameState.score2 << std::endl;
+                break;
+            }
+            case ConnectionAccept: {
+                std::cout << "The server accepted your connection request!" << std::endl;
+                break;
+            }
+            case RoomsInfo: {
+                RoomsInfoPacket roomsInformation;
+                packet >> roomsInformation;
+                std::cout << "Here are all the rooms: " << std::endl;
+                for (size_t i = 0; i < roomsInformation.roomAvailability.size(); i++) {
+                    if (roomsInformation.roomAvailability[i]) {
+                        std::cout << i << ": Availible" << std::endl;
+                    } else {
+                        std::cout << i << ": Occupied" << std::endl;
+                    }
+                }
+                break;
+            }
+            case Goodbye: {
+                std::cout << "The server stopped working! Thanks for playing!" << std::endl;
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
 }
