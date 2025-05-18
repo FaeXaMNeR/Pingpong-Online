@@ -15,22 +15,23 @@ enum PacketType {
     ConnectionAccept,
 
     RoomConnectionReq,
+    RoomConnectionAccept,
+    RoomConnectionDenied,
     RoomsInfo,
 
-    GameStart,
     Goodbye
 };
 
 struct PlayerInfo {
     sf::IpAddress address;
     unsigned short port;
-    unsigned long playerId;
+    int playerId;
 };
 
 struct RoomInfo {
     PongState roomGameState;
-    long player1Id;
-    long player2Id;
+    int player1Id;
+    int player2Id;
     bool isAvailable;
 };
 
@@ -49,28 +50,15 @@ struct PlayerInputPacket {
     bool moveDown;
 };
 
-struct AcceptionPacket {
-    PacketType type = ConnectionAccept;   
-};
-
-struct GameStartPacket {
-    PacketType type = GameStart;
-    int assignedPlayerId;
-};
-
 struct RoomsInfoPacket {
     PacketType type = RoomsInfo;
     std::vector<bool> roomAvailability;
 };
 
-inline sf::Packet& operator >> (sf::Packet &packet, PacketType &type) {
-    sf::Int32 typeAsInt;
-    if (packet >> typeAsInt) {
-        type = static_cast<PacketType>(typeAsInt);
-    }
-
-    return packet;
-}
+struct RoomConnectionReqPacket {
+    PacketType type = RoomConnectionReq;
+    int numOfRoom;
+};
 
 class ServerManager {
     public:
@@ -119,6 +107,7 @@ class ClientManager {
 
         sf::IpAddress clientAddress;
         unsigned short clientPort;
+        int clientId;
 
         sf::IpAddress serverAddress;
         unsigned short serverPort;
@@ -127,6 +116,15 @@ class ClientManager {
 
         sf::Font font;
 };
+
+inline sf::Packet& operator >> (sf::Packet &packet, PacketType &type) {
+    sf::Int32 typeAsInt;
+    if (packet >> typeAsInt) {
+        type = static_cast<PacketType>(typeAsInt);
+    }
+
+    return packet;
+}
 
 inline sf::Packet& operator << (sf::Packet &packet, const PacketType &type) {
     return packet << static_cast<sf::Int32>(type);
@@ -178,5 +176,12 @@ inline sf::Packet& operator << (sf::Packet &packet, std::vector<RoomInfo> rooms)
         packet << rooms[i].isAvailable;
     }
 
+    return packet;
+}
+
+inline sf::Packet& operator << (sf::Packet &packet, const RoomConnectionReqPacket &roomConnectionReq) {
+    packet  << roomConnectionReq.type
+            << roomConnectionReq.numOfRoom;
+    
     return packet;
 }
