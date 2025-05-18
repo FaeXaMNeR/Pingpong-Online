@@ -128,12 +128,16 @@ int main() {
             }
 
             case Client: {
+
+
+
+
                 ClientManager clientManager;
-                clientManager.sendConnectionReq();
+                
                 while (gameMode == Client) {
                     window.pollEvent(event);
                     clientManager.handleLobby(window, event);
-                    // clientManager.handleNetworkInput();                    
+                    //clientManager.handleNetworkInput();                    
                     
                     
                     if (event.type == sf::Event::Closed) {
