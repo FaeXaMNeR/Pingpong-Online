@@ -45,15 +45,20 @@ ServerManager::~ServerManager() {
     std::cout << "Disconnected" << std::endl;
 }
 
-void ClientManager::sendConnectionReq() { // TODO проверки       
-    sf::Packet packet;
-    packet << ConnectionRequest;
+void ClientManager::sendConnectionReq() { // TODO проверки   
+    // std::cout << "Enter server address: ";
+    // std::cin >> serverAddress;
+    // std::cout << "Enter server port: ";
+    // std::cin >> serverPort;
+    
+    // sf::Packet packet;
+    // packet << ConnectionRequest;
 
-    std::cout << "Sending connection request to " << serverAddress << " using port " << serverPort << std::endl;
+    // std::cout << "Sending connection request to " << serverAddress << " using port " << serverPort << std::endl;
 
-    if (clientSocket.send(packet, serverAddress, serverPort) != sf::Socket::Done) {
-        std::cerr << "Failed to send connection request" << std::endl;
-    }
+    // if (clientSocket.send(packet, serverAddress, serverPort) != sf::Socket::Done) {
+    //     std::cerr << "Failed to send connection request" << std::endl;
+    // }
 }
 
 void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
@@ -93,36 +98,30 @@ void ClientManager::handleNetworkInput() {
     sf::Packet packet;
     PacketType packetType;
 
-    std::cout << "Server ip address " << serverAddress << std::endl;
-    std::cout << "Server port " << serverPort << std::endl;
+    if (clientSocket.receive(packet, serverAddress, serverPort) == sf::Socket::Done) {
+        packet >> packetType;
+        //std::cout << packetType << std::endl;
+        switch (packetType) {
+            case GameStateUpdate: {
 
-    if (serverAddress != sf::IpAddress::None && serverPort != 0) {
-        if (clientSocket.receive(packet, serverAddress, serverPort) == sf::Socket::Done) {
-            packet >> packetType;
-            //std::cout << packetType << std::endl;
-            switch (packetType) {
-                case GameStateUpdate: {
-                    packet >> gameState;
-                    // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
-                    // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
-                    // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
-                    // std::cout << gameState.score1 << std::endl;
-                    // std::cout << gameState.score2 << std::endl;
-                    break;
-                }
-                case ConnectionAccept: {
-                    std::cout << "The server accepted your connection request!" << std::endl;
-                    isConnected = true;
-                    break;
-                }
-                case Goodbye: {
-                    std::cout << "The server stopped working! Thanks for playing!" << std::endl;
-                    isConnected = false;
-                    break;
-                }
-                default: {
-                    break;
-                }
+                packet >> gameState;
+                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.x << std::endl;
+                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.x << std::endl;
+                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.x << std::endl;
+                // std::cout << gameState.score1 << std::endl;
+                // std::cout << gameState.score2 << std::endl;
+                break;
+            }
+            case ConnectionAccept: {
+                std::cout << "The server accepted your connection request!" << std::endl;
+                break;
+            }
+            case Goodbye: {
+                std::cout << "The server stopped working! Thanks for playing!" << std::endl;
+                break;
+            }
+            default: {
+                break;
             }
         }
     }
@@ -198,15 +197,10 @@ ClientManager::ClientManager() {
     clientSocket.setBlocking(false);
 
     font.loadFromFile("pong.ttf");
-    lobbyIpText.setFont(font);
-    lobbyIpText.setFillColor(sf::Color::White);
-    lobbyIpText.setCharacterSize(WINDOW_Y / 30);
-    lobbyIpText.setPosition(sf::Vector2f(WINDOW_Y / 45, WINDOW_Y / 60));
-    
-    lobbyPortText.setFont(font);
-    lobbyPortText.setFillColor(sf::Color::White);
-    lobbyPortText.setCharacterSize(WINDOW_Y / 30);
-    lobbyPortText.setPosition(sf::Vector2f(WINDOW_Y / 45, WINDOW_Y * 3 / 60));
+    lobbyText.setFont(font);
+    lobbyText.setFillColor(sf::Color::White);
+    lobbyText.setCharacterSize(WINDOW_Y / 30);
+    lobbyText.setPosition(sf::Vector2f(WINDOW_Y / 45, WINDOW_Y / 60));
 }
 
 ClientManager::~ClientManager() {
@@ -225,49 +219,22 @@ void ClientManager::drawGameState(PongState pongState, sf::RenderWindow &window)
 }
 
 void ClientManager::handleLobby(sf::RenderWindow &window, sf::Event &event) {
-    if (serverAddress == sf::IpAddress::None) {
-        lobbyReadIp(window, event);
-    } else if (serverPort == 0) {
-        lobbyReadPort(window, event);
-    } else if (!isConnected) {
-        sendConnectionReq();
-    }
+    static sf::String IpAddressText;
+    lobbyText.setString("Server IP: " + IpAddressText);
     
-    window.draw(lobbyIpText);
-    window.draw(lobbyPortText);
-}
-
-void ClientManager::lobbyReadIp(sf::RenderWindow &window, sf::Event &event) {
-    lobbyIpText.setString("Server IP: " + serverIpString);
-
     window.clear(sf::Color::Black);
     if (event.type == sf::Event::KeyPressed) {
         if ((sf::Keyboard::Num0 <= event.key.code && event.key.code <= sf::Keyboard::Num9)
             || event.key.code == sf::Keyboard::Period) {
-            serverIpString += sf::Keyboard::getDescription(event.key.scancode);
+            IpAddressText += sf::Keyboard::getDescription(event.key.scancode);
         }
-        if (event.key.code == sf::Keyboard::BackSpace && serverIpString.getSize() > 0) {
-            serverIpString.erase(serverIpString.getSize() - 1, 1);
-        }
-        if (event.key.code == sf::Keyboard::Enter) {
-            serverAddress = sf::IpAddress(serverIpString);
-        }
-    }
-}
-
-void ClientManager::lobbyReadPort(sf::RenderWindow &window, sf::Event &event) {
-    lobbyPortText.setString("Server port: " + serverPortString);
-
-    window.clear(sf::Color::Black);
-    if (event.type == sf::Event::KeyPressed) {
-        if (sf::Keyboard::Num0 <= event.key.code && event.key.code <= sf::Keyboard::Num9) {
-            serverPortString += sf::Keyboard::getDescription(event.key.scancode);
-        }
-        if (event.key.code == sf::Keyboard::BackSpace && serverPortString.getSize() > 0) {
-            serverPortString.erase(serverPortString.getSize() - 1, 1);
+        if (event.key.code == sf::Keyboard::BackSpace && IpAddressText.getSize() > 0) {
+            IpAddressText.erase(IpAddressText.getSize() - 1, 1);
         }
         if (event.key.code == sf::Keyboard::Enter) {
-            serverPort = static_cast<unsigned short>(std::stoul(serverPortString.toAnsiString()));
+            serverAddress = sf::IpAddress(IpAddressText);
         }
     }
+    
+    window.draw(lobbyText);
 }

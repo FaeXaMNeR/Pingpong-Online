@@ -140,8 +140,6 @@ class ClientManager {
 
         void sendConnectionReq();
         void handleLobby(sf::RenderWindow &window, sf::Event &event);
-        void lobbyReadIp(sf::RenderWindow &window, sf::Event &event);
-        void lobbyReadPort(sf::RenderWindow &window, sf::Event &event);
         void handleNetworkInput();
 
         void sendPlayerInput(const PlayerInputPacket &input);
@@ -155,14 +153,10 @@ class ClientManager {
         unsigned short clientPort;
 
         sf::IpAddress serverAddress;
-        unsigned short serverPort = 0;
-        bool isConnected = false;
+        unsigned short serverPort;
 
         GameStatePacket gameState;
 
-        sf::Text lobbyIpText;
-        sf::Text lobbyPortText;
-        sf::String serverIpString;
-        sf::String serverPortString;
+        sf::Text lobbyText;
         sf::Font font;
 };
