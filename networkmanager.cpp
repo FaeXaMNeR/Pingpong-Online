@@ -119,10 +119,34 @@ void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
     }
 }
 
-void ServerManager::sendGameState(const PongState &pongState) {
+void ServerManager::sendGameState(PongState &pongState) {
     sf::Packet packet;
     GameStatePacket gameState;
-    if (networkClock.getElapsedTime().asSeconds() >= FIXED_TIME_STEP) {
+    static int counter = 0;
+    static int PPScounter = 0;
+    static sf::Clock clock;
+    //std::cout << networkClock.getElapsedTime().asSeconds() << std::endl;
+    if (counter >= FRAMES_PER_PACKET) {
+        // pongState.ball.move(pongState.velocity * pongState.getDeltaTime());
+
+        // pongState.handleBallCollisions();
+
+        // if (pongState.ball.getPosition().x < 0) {
+        //     pongState.gooool(Right);
+        // } else if (pongState.ball.getPosition().x > WINDOW_X) {
+        //     pongState.gooool(Left);
+        // }
+
+        //std::cout << networkClock.getElapsedTime().asSeconds() << std::endl;
+
+        PPScounter++;
+        if (clock.getElapsedTime().asSeconds() >= 1) {
+            std::cout << "PPS: " << PPScounter << std::endl;
+
+            PPScounter = 0;
+            clock.restart();
+        }
+
         gameState.type = GameStateUpdate;
         gameState.ballPos = pongState.ball.getPosition();
         gameState.paddle1Pos = pongState.paddle1.getPosition();
@@ -130,21 +154,22 @@ void ServerManager::sendGameState(const PongState &pongState) {
         gameState.score1 = pongState.intScore1;
         gameState.score2 = pongState.intScore2;
 
-        std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
-        std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
-        std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
-        std::cout << gameState.score1 << std::endl;
-        std::cout << gameState.score2 << std::endl;
+        // std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+        // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+        // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+        // std::cout << gameState.score1 << std::endl;
+        // std::cout << gameState.score2 << std::endl;
 
         packet << gameState;
 
         for (size_t i = 1; i < players.size(); i++) {
             serverSocket.send(packet, players[i].address, players[i].port);
         }
-        networkClock.restart();
-    }
 
-    
+        counter = 0;
+        //networkClock.restart();
+    }  
+    counter++;  
 }
 
 // void ServerManager::runRooms() {
@@ -168,7 +193,7 @@ void ServerManager::sendGameState(const PongState &pongState) {
 //         }
 //     }
 
-//     return false;
+//     return false;counter++;
 // }
 
 // void ClientManager::sendPlayerInput(const PlayerInputPacket &input) {
@@ -249,17 +274,26 @@ void ClientManager::handleNetworkInput() {
     sf::Packet inputPacket;
     sf::Packet responsePacket;
     PacketType packetType;
+    static int counter = 0;
+    static sf::Clock clock;
 
     if (clientSocket.receive(inputPacket, serverAddress, serverPort) == sf::Socket::Done) {
         inputPacket >> packetType;
         switch (packetType) {
             case GameStateUpdate: {
                 inputPacket >> gameState;
-                std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
-                std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
-                std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
-                std::cout << gameState.score1 << std::endl;
-                std::cout << gameState.score2 << std::endl;
+
+                counter++;
+                if (clock.getElapsedTime().asSeconds() >= 1) {
+                    std::cout << "PPS: " << counter << std::endl;
+                    counter = 0;
+                    clock.restart();
+                }
+                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+                // std::cout << gameState.score1 << std::endl;
+                // std::cout << gameState.score2 << std::endl;
                 break;
             }
             case ConnectionAccept: {

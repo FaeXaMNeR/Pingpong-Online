@@ -70,7 +70,7 @@ class ServerManager {
 
         void runRooms();
 
-        void sendGameState(const PongState &pongState);
+        void sendGameState(PongState &pongState);
         bool receivePlayerInput(PlayerInputPacket &input);
 
         void drawServerInfo(sf::RenderWindow &window) {
