@@ -52,7 +52,9 @@ ServerManager::~ServerManager() {
     serverAddress = sf::IpAddress::None;
     serverPort = 0;
     players.clear();
-    
+    rooms.clear();
+    serverInfoText.setString("");
+
     std::cout << "Disconnected" << std::endl;
 }
 
@@ -92,12 +94,14 @@ void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
                 inputPacket >> numOfRoom;
 
                 if (rooms[numOfRoom].isAvailable) {
-                    responsePacket << RoomConnectionAccept;
+                    responsePacket << RoomConnectionAccept << numOfRoom;
 
                     if (rooms[numOfRoom].player1Id == -1) {
                         inputPacket >> rooms[numOfRoom].player1Id;
                     } else {
                         inputPacket >> rooms[numOfRoom].player2Id;
+                    }
+                    if (rooms[numOfRoom].player1Id != -1 && rooms[numOfRoom].player2Id != -1) {
                         rooms[numOfRoom].isAvailable = false;
                     }
                 } else {
@@ -111,6 +115,28 @@ void ServerManager::handleNetworkInput(PlayerInputPacket &input) {
                 std::cout << "Player1Id: " << rooms[numOfRoom].player1Id << std::endl;
                 std::cout << "Player2Id: " << rooms[numOfRoom].player2Id << std::endl;
                 std::cout << "rooms[numOfRoom].isAvailable: " << rooms[numOfRoom].isAvailable << std::endl;
+
+                break;
+            }
+            case Goodbye: {
+                int roomId;
+                int clientId;
+                inputPacket >> roomId >> clientId;
+                if (!rooms[roomId].isAvailable) {
+                    rooms[roomId].isAvailable = true;
+                } 
+                if (rooms[roomId].player1Id == clientId) {
+                    rooms[roomId].player1Id = -1;
+                } else {
+                    rooms[roomId].player2Id = -1;
+                } 
+
+                std::cout << "Goodbye from clientId " << clientId << " in room " << roomId << std::endl;
+                std::cout << "Num of the room: " << roomId << std::endl;
+                std::cout << "Player1Id: " << rooms[roomId].player1Id << std::endl;
+                std::cout << "Player2Id: " << rooms[roomId].player2Id << std::endl;
+                std::cout << "rooms[roomId].isAvailable: " << rooms[roomId].isAvailable << std::endl;
+                break;
             }
             default: {
                 break;
@@ -130,11 +156,11 @@ void ServerManager::sendGameState(PongState &pongState) {
     gameState.score1 = pongState.intScore1;
     gameState.score2 = pongState.intScore2;
 
-    std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
-    std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
-    std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
-    std::cout << gameState.score1 << std::endl;
-    std::cout << gameState.score2 << std::endl;
+    // std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+    // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+    // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+    // std::cout << gameState.score1 << std::endl;
+    // std::cout << gameState.score2 << std::endl;
 
     packet << gameState;
 
@@ -199,7 +225,18 @@ ClientManager::ClientManager() {
 }
 
 ClientManager::~ClientManager() {
+    sf::Packet packet;
+    packet << Goodbye << roomId << clientId;
+
+    clientSocket.send(packet, serverAddress, serverPort);
     
+    clientSocket.unbind();
+    serverAddress = sf::IpAddress::None;
+    serverPort = 0;
+    clientAddress = sf::IpAddress::None;
+    clientPort = 0;
+
+    std::cout << "Disconnected" << std::endl;
 }
 
 void ClientManager::drawGameState(PongState pongState, sf::RenderWindow &window) {
@@ -245,26 +282,17 @@ void ClientManager::handleNetworkInput() {
     sf::Packet inputPacket;
     sf::Packet responsePacket;
     PacketType packetType;
-    static int counter = 0;
-    static sf::Clock clock;
 
     if (clientSocket.receive(inputPacket, serverAddress, serverPort) == sf::Socket::Done) {
         inputPacket >> packetType;
         switch (packetType) {
             case GameStateUpdate: {
                 inputPacket >> gameState;
-
-                counter++;
-                if (clock.getElapsedTime().asSeconds() >= 1) {
-                    std::cout << "PPS: " << counter << std::endl;
-                    counter = 0;
-                    clock.restart();
-                }
-                std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
-                std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
-                std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
-                std::cout << gameState.score1 << std::endl;
-                std::cout << gameState.score2 << std::endl;
+                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+                // std::cout << gameState.score1 << std::endl;
+                // std::cout << gameState.score2 << std::endl;
                 break;
             }
             case ConnectionAccept: {
@@ -293,9 +321,13 @@ void ClientManager::handleNetworkInput() {
                     std::cout << "Please enter number of the room you want to join : ";
                     std::cin >> roomConnectionReq.numOfRoom;
                 }
-
+                
                 responsePacket << roomConnectionReq << clientId;
                 clientSocket.send(responsePacket, serverAddress, serverPort);
+                break;
+            }
+            case RoomConnectionAccept: {
+                inputPacket >> roomId;
                 break;
             }
             case Goodbye: {

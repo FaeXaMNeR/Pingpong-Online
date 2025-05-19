@@ -109,6 +109,7 @@ class ClientManager {
         sf::IpAddress clientAddress;
         unsigned short clientPort;
         int clientId;
+        int roomId;
 
         sf::IpAddress serverAddress;
         unsigned short serverPort;
