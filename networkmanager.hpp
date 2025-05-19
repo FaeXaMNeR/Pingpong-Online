@@ -26,6 +26,8 @@ struct PlayerInfo {
     sf::IpAddress address;
     unsigned short port;
     int playerId;
+    bool moveUp;
+    bool moveDown;
 };
 
 struct RoomInfo {
@@ -48,6 +50,7 @@ struct PlayerInputPacket {
     PacketType type = PlayerInput;
     bool moveUp;
     bool moveDown;
+    int playerId;
 };
 
 struct RoomsInfoPacket {
@@ -65,12 +68,10 @@ class ServerManager {
         ServerManager();
         ~ServerManager();
         
-        void handleNetworkInput(PlayerInputPacket &input);
+        void handleNetworkInput();
         void respondToConnectionReq(PlayerInfo &playerInfo);
         void handleRoomConnectionReq(int roomId, int playerId);
         void handleClientDisconnection(int roomId, int clientId);
-
-        bool connectClient(const sf::IpAddress &address, unsigned short port);
 
         void runRooms();
 
@@ -104,8 +105,7 @@ class ClientManager {
         void sendConnectionReq(sf::RenderWindow &window);
         void handleNetworkInput();
 
-        void sendPlayerInput(const PlayerInputPacket &input);
-        bool receiveGameState(GameStatePacket &state);
+        void sendPlayerInput();
 
         void drawGameState(PongState pongState, sf::RenderWindow &window);
 
@@ -155,17 +155,17 @@ inline sf::Packet& operator >> (sf::Packet &packet, GameStatePacket &state) {
 }
 
 inline sf::Packet& operator << (sf::Packet &packet, const PlayerInputPacket &input) {
-    return packet << input.type << input.moveUp << input.moveDown;
+    return packet   << input.type 
+                    << input.moveUp << input.moveDown
+                    << input.playerId;
 }
 
 inline sf::Packet &operator >> (sf::Packet &packet, PlayerInputPacket &input) {
-    PacketType receivedType;
-    if (packet >> receivedType && receivedType == PlayerInput) {
-        packet >> input.moveUp >> input.moveDown;
-    }
+    packet  >> input.moveUp >> input.moveDown
+            >> input.playerId;
 
     return packet;
-}       // WARNING Может сломаться
+}
 
 inline sf::Packet& operator >> (sf::Packet &packet, RoomsInfoPacket &roomsInfo) {
     bool temp;

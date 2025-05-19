@@ -12,4 +12,4 @@ const int PADDLE_Y = WINDOW_Y * 2 / 30;
 
 const int NUM_OF_ROOMS = 5;
 
-const int FRAMES_PER_PACKET = 1;
+const int PACKETS_PER_FRAME = 10;
