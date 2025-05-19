@@ -154,11 +154,11 @@ void ServerManager::sendGameState(PongState &pongState) {
         gameState.score1 = pongState.intScore1;
         gameState.score2 = pongState.intScore2;
 
-        // std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
-        // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
-        // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
-        // std::cout << gameState.score1 << std::endl;
-        // std::cout << gameState.score2 << std::endl;
+        std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+        std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+        std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+        std::cout << gameState.score1 << std::endl;
+        std::cout << gameState.score2 << std::endl;
 
         packet << gameState;
 
@@ -289,11 +289,11 @@ void ClientManager::handleNetworkInput() {
                     counter = 0;
                     clock.restart();
                 }
-                // std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
-                // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
-                // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
-                // std::cout << gameState.score1 << std::endl;
-                // std::cout << gameState.score2 << std::endl;
+                std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+                std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+                std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+                std::cout << gameState.score1 << std::endl;
+                std::cout << gameState.score2 << std::endl;
                 break;
             }
             case ConnectionAccept: {
