@@ -165,7 +165,7 @@ int main() {
                     }
 
                     clientManager.drawGameState(pongState, window);
-                    //window.display();
+                    window.display();
                 }
             }
 
