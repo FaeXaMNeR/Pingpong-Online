@@ -97,7 +97,6 @@ int main() {
             case Server: {
                 ServerManager serverManager;
                 PlayerInputPacket input;
-                int counter = 0;
                 window.setFramerateLimit(60);
                 sf::Clock clock;
                 while (gameMode == Server) {
@@ -122,12 +121,6 @@ int main() {
                     } 
                     if (event.key.code == sf::Keyboard::Escape) {
                         gameMode = MainMenu;
-                    } 
-                    counter++;
-                    if (clock.getElapsedTime().asSeconds() >= 1) {
-                        //std::cout << counter << std::endl;
-                        counter = 0;
-                        clock.restart();
                     }
 
                     pongState.draw(window);
@@ -141,19 +134,9 @@ int main() {
                 ClientManager clientManager;
                 clientManager.sendConnectionReq(window);
                 sf::Clock clientClock;
-                int counter = 0;
-                sf::Clock clock;
-                window.setFramerateLimit(120);
+                window.setFramerateLimit(90); // Пока как костыль, надо переделать
                 while (gameMode == Client) {
-                    // std::cout << clientClock.restart().asSeconds() << std::endl;
                     clientManager.handleNetworkInput();
-
-                    counter++;
-                    if (clock.getElapsedTime().asSeconds() >= 1) {
-                        std::cout << "FPS: " << counter << std::endl;
-                        counter = 0;
-                        clock.restart();
-                    }
                     
                     window.pollEvent(event);
                     if (event.type == sf::Event::Closed) {
