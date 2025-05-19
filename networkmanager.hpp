@@ -57,7 +57,7 @@ struct RoomsInfoPacket {
 
 struct RoomConnectionReqPacket {
     PacketType type = RoomConnectionReq;
-    int numOfRoom;
+    int roomId;
 };
 
 class ServerManager {
@@ -66,14 +66,19 @@ class ServerManager {
         ~ServerManager();
         
         void handleNetworkInput(PlayerInputPacket &input);
+        void respondToConnectionReq(PlayerInfo &playerInfo);
+        void handleRoomConnectionReq(int roomId, int playerId);
+        void handleClientDisconnection(int roomId, int clientId);
+
         bool connectClient(const sf::IpAddress &address, unsigned short port);
 
         void runRooms();
 
-        void sendGameState(PongState &pongState);
+        void sendGameState();
         bool receivePlayerInput(PlayerInputPacket &input);
 
-        void drawServerInfo(sf::RenderWindow &window) {
+        void drawGameState(sf::RenderWindow &window) {
+            rooms[0].roomGameState.draw(window);
             window.draw(serverInfoText);
         }
 
@@ -183,7 +188,7 @@ inline sf::Packet& operator << (sf::Packet &packet, std::vector<RoomInfo> rooms)
 
 inline sf::Packet& operator << (sf::Packet &packet, const RoomConnectionReqPacket &roomConnectionReq) {
     packet  << roomConnectionReq.type
-            << roomConnectionReq.numOfRoom;
+            << roomConnectionReq.roomId;
     
     return packet;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
+#include <iostream>
 
 enum GameMode {
     MainMenu,
@@ -33,7 +34,7 @@ public:
     sf::Vector2f velocity;
     sf::Clock clock;
 
-    void setTheGame() {
+    PongState() {
         paddle1.setSize(sf::Vector2f(PADDLE_X, PADDLE_Y));
         paddle2.setSize(sf::Vector2f(PADDLE_X, PADDLE_Y));
 
@@ -58,8 +59,8 @@ public:
         textScore2.setPosition(sf::Vector2f(WINDOW_X * 4 / 5, 0));
         
         font.loadFromFile("pong.ttf");
-        textScore1.setFont(font);
-        textScore2.setFont(font);
+        //textScore1.setFont(font);
+        //textScore2.setFont(font);
 
         convertScoreToText();
 
@@ -70,6 +71,8 @@ public:
         ball.setPointCount(10);
         ball.setFillColor(sf::Color::White);
         ball.setPosition(sf::Vector2f(WINDOW_X / 2, WINDOW_Y / 2));  
+
+        resetVelocity(Right);
     }
 
     void convertScoreToText() {

@@ -22,8 +22,6 @@ int main() {
 
     PongState pongState;
 
-    pongState.setTheGame();
-
     GameMode gameMode = MainMenu;
     
     sf::Clock networkClock;
@@ -102,17 +100,9 @@ int main() {
                 while (gameMode == Server) {
                     serverManager.handleNetworkInput(input);
 
-                    pongState.ball.move(pongState.velocity * pongState.getDeltaTime());
+                    serverManager.runRooms();
 
-                    pongState.handleBallCollisions();
-
-                    if (pongState.ball.getPosition().x < 0) {
-                        pongState.gooool(Right);
-                    } else if (pongState.ball.getPosition().x > WINDOW_X) {
-                        pongState.gooool(Left);
-                    }
-
-                    serverManager.sendGameState(pongState);
+                    serverManager.sendGameState();
 
                     window.pollEvent(event);
                     if (event.type == sf::Event::Closed) {
@@ -123,8 +113,7 @@ int main() {
                         gameMode = MainMenu;
                     }
 
-                    pongState.draw(window);
-                    serverManager.drawServerInfo(window);
+                    serverManager.drawGameState(window);
                     window.display();
                 }
                 break;
