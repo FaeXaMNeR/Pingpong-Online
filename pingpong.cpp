@@ -143,7 +143,7 @@ int main() {
                 sf::Clock clientClock;
                 int counter = 0;
                 sf::Clock clock;
-                window.setFramerateLimit(30);
+                window.setFramerateLimit(120);
                 while (gameMode == Client) {
                     // std::cout << clientClock.restart().asSeconds() << std::endl;
                     clientManager.handleNetworkInput();
