@@ -17,7 +17,8 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_X, WINDOW_Y), "PingPong", sf::Style::Titlebar | sf::Style::Close);
     Menu menu;
 
-    window.setVerticalSyncEnabled(true);
+    //window.setVerticalSyncEnabled(true);
+    window.setFramerateLimit(70);
 
     PongState pongState;
 
@@ -97,6 +98,7 @@ int main() {
                 ServerManager serverManager;
                 PlayerInputPacket input;
                 int counter = 0;
+                window.setFramerateLimit(60);
                 sf::Clock clock;
                 while (gameMode == Server) {
                     serverManager.handleNetworkInput(input);
@@ -141,6 +143,7 @@ int main() {
                 sf::Clock clientClock;
                 int counter = 0;
                 sf::Clock clock;
+                window.setFramerateLimit(30);
                 while (gameMode == Client) {
                     // std::cout << clientClock.restart().asSeconds() << std::endl;
                     clientManager.handleNetworkInput();
