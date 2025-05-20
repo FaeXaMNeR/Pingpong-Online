@@ -176,6 +176,14 @@ public:
     void moveBall() {
         ball.move(velocity * getDeltaTime());
     }
+
+    void handleGoals() {
+        if (ball.getPosition().x < 0) {
+            gooool(Right);
+        } else if (ball.getPosition().x > WINDOW_X) {
+            gooool(Left);
+        }
+    }
 private: 
     sf::Vector2f velocity;
     sf::Vertex line[2];
