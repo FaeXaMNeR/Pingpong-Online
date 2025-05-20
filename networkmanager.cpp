@@ -88,9 +88,6 @@ void ServerManager::handleNetworkInput() {
                     players[input.playerId].moveUp = input.moveUp;
                     players[input.playerId].moveDown = input.moveDown;
 
-                    // std::cout << "Player Input packet!!!!" << std::endl;
-                    // std::cout << "Player up : " << input.moveUp << std::endl;
-                    // std::cout << "Player down : " << input.moveDown << std::endl;
                     break;
                 }
                 case RoomConnectionReq: {
@@ -187,11 +184,9 @@ void ServerManager::sendGameState() {
             gameState.score2 = rooms[i].roomGameState.intScore2;
             packet << gameState;
 
-            //std::cout << "Sending data about room " << i << " to clients: " << rooms[i].player1Id;
             if (rooms[i].player1Id != 0) {
                 serverSocket.send(packet, players[rooms[i].player1Id].address, players[rooms[i].player1Id].port);
             }
-            //std::cout << " and " << rooms[i].player2Id << std::endl;
             serverSocket.send(packet, players[rooms[i].player2Id].address, players[rooms[i].player2Id].port); 
         }
         packet.clear();
@@ -204,7 +199,7 @@ void ServerManager::runRooms() {
 
     for (size_t i = 0; i < rooms.size(); i++) {
         if (!rooms[i].isAvailable) {
-            rooms[i].roomGameState.ball.move(rooms[i].roomGameState.velocity * rooms[i].roomGameState.getDeltaTime());
+            rooms[i].roomGameState.moveBall();
 
             rooms[i].roomGameState.handleBallCollisions();
 
@@ -228,24 +223,11 @@ void ServerManager::runRooms() {
                     rooms[i].roomGameState.paddle2.move(sf::Vector2f(0, PADDLE_X / 2));
             }
 
-            std::cout << "players[rooms[i].player1Id].moveDown   " << players[rooms[i].player1Id].moveUp << std::endl;
-            std::cout << "players[rooms[i].player1Id].moveDown " << players[rooms[i].player1Id].moveDown << std::endl <<std::endl;
-            std::cout << "players[rooms[i].player2Id].moveUp   " << players[rooms[i].player2Id].moveUp << std::endl;
-            std::cout << "players[rooms[i].player2Id].moveDown " << players[rooms[i].player2Id].moveDown << std::endl << std::endl << std::endl;
-
             if (rooms[i].roomGameState.ball.getPosition().x < 0) {
                 rooms[i].roomGameState.gooool(Right);
             } else if (rooms[i].roomGameState.ball.getPosition().x > WINDOW_X) {
                 rooms[i].roomGameState.gooool(Left);
             }
-
-            // std::cout << "runRooms: room number " << i << std::endl;
-
-            // std::cout << rooms[i].roomGameState.ball.getPosition().x << " " << rooms[i].roomGameState.ball.getPosition().y << std::endl;
-            // std::cout << rooms[i].roomGameState.paddle1.getPosition().x << " " << rooms[i].roomGameState.paddle1.getPosition().y << std::endl;
-            // std::cout << rooms[i].roomGameState.paddle2.getPosition().x << " " << rooms[i].roomGameState.paddle2.getPosition().y << std::endl;
-            // std::cout << rooms[i].roomGameState.intScore1 << std::endl;
-            // std::cout << rooms[i].roomGameState.intScore2 << std::endl;
         }
     }
 }
@@ -308,7 +290,7 @@ void ClientManager::sendConnectionReq(sf::RenderWindow &window) { // TODO про
     }
 }
 
-void ClientManager::handleNetworkInput() { // TODO разбить на кучу маленьких функций
+void ClientManager::handleNetworkInput() {
     sf::Packet inputPacket;
     sf::Packet responsePacket;
     PacketType packetType;

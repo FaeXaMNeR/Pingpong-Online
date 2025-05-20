@@ -76,7 +76,6 @@ class ServerManager {
         void runRooms();
 
         void sendGameState();
-        bool receivePlayerInput(PlayerInputPacket &input);
 
         void drawGameState(sf::RenderWindow &window) {
             rooms[0].roomGameState.draw(window);

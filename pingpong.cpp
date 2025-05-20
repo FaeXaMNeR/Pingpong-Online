@@ -15,7 +15,6 @@
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_X, WINDOW_Y), "PingPong", sf::Style::Titlebar | sf::Style::Close);
-    Menu menu;
 
     window.setVerticalSyncEnabled(true);
 
@@ -28,6 +27,7 @@ int main() {
     while (window.isOpen()) {
         switch (gameMode) {
             case MainMenu: {
+                Menu menu;
                 while (gameMode == MainMenu) {
                     menu.draw(window);
                     if (window.pollEvent(event)) {
@@ -46,7 +46,7 @@ int main() {
 
             case OfflineGame: {
                 while (gameMode == OfflineGame) {
-                    pongState.ball.move(pongState.velocity * pongState.getDeltaTime());
+                    pongState.moveBall();
 
                     pongState.handleBallCollisions();
 
@@ -64,7 +64,7 @@ int main() {
                     
                     if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) && 
                                 !(pongState.paddle2.getGlobalBounds().intersects(pongState.botBorder.getGlobalBounds())))
-                        pongState.paddle2.move(sf::Vector2f(0, PADDLE_X / 2));  // TODO что-то сделать с этим безобразием
+                        pongState.paddle2.move(sf::Vector2f(0, PADDLE_X / 2));
 
                     if (pongState.ball.getPosition().x < 0) {
                         pongState.gooool(Right);
@@ -89,11 +89,10 @@ int main() {
 
             case Server: {
                 ServerManager serverManager;
-                PlayerInputPacket input;
-                sf::Clock clock;
                 while (gameMode == Server) {
+                    //std::cout << "Before" << std::endl;
                     serverManager.handleNetworkInput();
-
+                    
                     serverManager.runRooms();
 
                     serverManager.sendGameState();
@@ -107,7 +106,9 @@ int main() {
                         gameMode = MainMenu;
                     }
 
+                    
                     serverManager.drawGameState(window);
+                    //std::cout << "After" << std::endl;
                     window.display();
                 }
                 break;
