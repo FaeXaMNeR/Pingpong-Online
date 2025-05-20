@@ -90,7 +90,6 @@ int main() {
             case Server: {
                 ServerManager serverManager;
                 while (gameMode == Server) {
-                    //std::cout << "Before" << std::endl;
                     serverManager.handleNetworkInput();
                     
                     serverManager.runRooms();
@@ -106,9 +105,7 @@ int main() {
                         gameMode = MainMenu;
                     }
 
-                    
                     serverManager.drawGameState(window);
-                    //std::cout << "After" << std::endl;
                     window.display();
                 }
                 break;
@@ -117,7 +114,6 @@ int main() {
             case Client: {
                 ClientManager clientManager;
                 clientManager.sendConnectionReq(window);
-                sf::Clock clientClock;
                 while (gameMode == Client) {
                     clientManager.handleNetworkInput();
 

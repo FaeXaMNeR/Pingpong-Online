@@ -6,11 +6,11 @@
 #include "constants.hpp"
 
 ServerManager::ServerManager() {
-    serverSocket.setBlocking(false);
-    
     while (serverSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done) {
         std::cerr << "Failed to bind server socket to port" << std::endl;
     }
+    
+    serverSocket.setBlocking(false);
 
     serverAddress = sf::IpAddress::getLocalAddress();
     serverPort = serverSocket.getLocalPort();
@@ -87,6 +87,10 @@ void ServerManager::handleNetworkInput() {
                     inputPacket >> input;
                     players[input.playerId].moveUp = input.moveUp;
                     players[input.playerId].moveDown = input.moveDown;
+
+                    std::cout << "Player Input packet!!!!" << std::endl;
+                    std::cout << "Player up : " << input.moveUp << std::endl;
+                    std::cout << "Player down : " << input.moveDown << std::endl;
 
                     break;
                 }
@@ -233,6 +237,10 @@ void ServerManager::runRooms() {
 }
 
 ClientManager::ClientManager() {
+    while (clientSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done) {
+        std::cerr << "Failed to bind server socket to port" << std::endl;
+    }
+    
     clientSocket.setBlocking(false);
 }
 
@@ -288,12 +296,18 @@ void ClientManager::sendConnectionReq(sf::RenderWindow &window) { // TODO про
     if (clientSocket.send(packet, serverAddress, serverPort) != sf::Socket::Done) {
         std::cerr << "Failed to send connection request" << std::endl;
     }
+
+    std::cout << serverAddress << std::endl;
+    std::cout << serverPort << std::endl;
 }
 
 void ClientManager::handleNetworkInput() {
     sf::Packet inputPacket;
     sf::Packet responsePacket;
     PacketType packetType;
+    std::cout << "handleNetworkInput" << std::endl;
+    std::cout << serverAddress << std::endl;
+    std::cout << serverPort << std::endl;
 
     for (size_t i = 0; i < PACKETS_PER_FRAME; i++) {
         if (clientSocket.receive(inputPacket, serverAddress, serverPort) == sf::Socket::Done) {
@@ -301,20 +315,26 @@ void ClientManager::handleNetworkInput() {
             switch (packetType) {
                 case GameStateUpdate: {
                     inputPacket >> gameState;
-                    std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
-                    std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
-                    std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
-                    std::cout << gameState.score1 << std::endl;
-                    std::cout << gameState.score2 << std::endl;
+                    // std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
+                    // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
+                    // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
+                    // std::cout << gameState.score1 << std::endl;
+                    // std::cout << gameState.score2 << std::endl;
                     break;
                 }
                 case ConnectionAccept: {
+                    std::cout << "Connection accept" << std::endl;
+                    std::cout << serverAddress << std::endl;
+                    std::cout << serverPort << std::endl;
                     inputPacket >> clientId;
                     std::cout << "The server accepted your connection request!" << std::endl;
                     std::cout << "Your game ID is " << clientId << std::endl;
                     break;
                 }
                 case RoomsInfo: {
+                    std::cout << "RoomsInfo" << std::endl;
+                    std::cout << serverAddress << std::endl;
+                    std::cout << serverPort << std::endl;
                     RoomsInfoPacket roomsInformation;
                     inputPacket >> roomsInformation;
                     std::cout << "Here are all the rooms: " << std::endl;
@@ -354,6 +374,9 @@ void ClientManager::handleNetworkInput() {
             }
         }
     }
+
+    std::cout << serverAddress << std::endl;
+    std::cout << serverPort << std::endl;
 }
 
 void ClientManager::sendPlayerInput() {
@@ -366,5 +389,10 @@ void ClientManager::sendPlayerInput() {
 
     packet << input;
 
-    clientSocket.send(packet, serverAddress, serverPort);
+    if (clientSocket.send(packet, serverAddress, serverPort) == sf::Socket::Status::Error) {
+        // std::cout << packet << std::endl;
+        // std::cout << serverAddress << std::endl;
+        // std::cout << serverPort << std::endl;
+    }
 }
+    
