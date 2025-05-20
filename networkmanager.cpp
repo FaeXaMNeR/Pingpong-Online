@@ -304,13 +304,15 @@ void ClientManager::sendConnectionReq(sf::RenderWindow &window) { // TODO про
 void ClientManager::handleNetworkInput() {
     sf::Packet inputPacket;
     sf::Packet responsePacket;
+    sf::IpAddress tempAddress;
+    unsigned short tempPort;
     PacketType packetType;
     std::cout << "handleNetworkInput" << std::endl;
     std::cout << serverAddress << std::endl;
     std::cout << serverPort << std::endl;
 
     for (size_t i = 0; i < PACKETS_PER_FRAME; i++) {
-        if (clientSocket.receive(inputPacket, serverAddress, serverPort) == sf::Socket::Done) {
+        if (clientSocket.receive(inputPacket, tempAddress, tempPort) == sf::Socket::Done) {
             inputPacket >> packetType;
             switch (packetType) {
                 case GameStateUpdate: {

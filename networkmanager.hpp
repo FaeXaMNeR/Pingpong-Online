@@ -107,6 +107,7 @@ class ClientManager {
         void sendPlayerInput();
 
         void drawGameState(PongState pongState, sf::RenderWindow &window);
+    private:
 
         sf::UdpSocket clientSocket;
 
