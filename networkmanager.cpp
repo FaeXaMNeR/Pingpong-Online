@@ -175,6 +175,7 @@ void ServerManager::handleClientDisconnection(int roomId, int clientId){
 }
 
 void ServerManager::sendGameState() {
+    static int counter = 0;
     sf::Packet packet;
     GameStatePacket gameState;
 
@@ -186,7 +187,7 @@ void ServerManager::sendGameState() {
             gameState.paddle2Pos = rooms[i].roomGameState.paddle2.getPosition();
             gameState.score1 = rooms[i].roomGameState.intScore1;
             gameState.score2 = rooms[i].roomGameState.intScore2;
-            packet << gameState;
+            packet << gameState << counter;
 
             if (rooms[i].player1Id != 0) {
                 serverSocket.send(packet, players[rooms[i].player1Id].address, players[rooms[i].player1Id].port);
@@ -195,6 +196,7 @@ void ServerManager::sendGameState() {
         }
         packet.clear();
     }    
+    counter++;
 }
 
 void ServerManager::runRooms() {
@@ -270,7 +272,7 @@ void ClientManager::drawGameState(PongState pongState, sf::RenderWindow &window)
     pongState.draw(window);
 }
 
-void ClientManager::sendConnectionReq(sf::RenderWindow &window) { // TODO проверки   
+void ClientManager::sendConnectionReq(sf::RenderWindow &window) {   
     sf::Text checkTerminalText;
     font.loadFromFile("pong.ttf");
     checkTerminalText.setString("Please, check your terminal");
@@ -317,6 +319,10 @@ void ClientManager::handleNetworkInput() {
             switch (packetType) {
                 case GameStateUpdate: {
                     inputPacket >> gameState;
+
+                    int counter;
+                    inputPacket >> counter;
+                    std::cout << "Counter: " << counter << std::endl;
                     // std::cout << gameState.ballPos.x << " " << gameState.ballPos.y << std::endl;
                     // std::cout << gameState.paddle1Pos.x << " " << gameState.paddle1Pos.y << std::endl;
                     // std::cout << gameState.paddle2Pos.x << " " << gameState.paddle2Pos.y << std::endl;
