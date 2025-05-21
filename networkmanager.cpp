@@ -72,10 +72,10 @@ void ServerManager::handleNetworkInput() {
             switch (packetType) {
                 case ConnectionRequest: {
                     PlayerInfo newPlayer = {clientAddress, clientPort, static_cast<int>(players.size()), false, false};
-                    std::cout << "New player!" << std::endl;
+                    std::cout << std::endl << "New player!" << std::endl;
                     std::cout << "New player address: " << newPlayer.address    << std::endl;
                     std::cout << "New player port:    " << newPlayer.port       << std::endl;
-                    std::cout << "New player game id: " << newPlayer.playerId   << std::endl;
+                    std::cout << "New player game id: " << newPlayer.playerId   << std::endl << std::endl;
                     players.push_back(newPlayer);
 
                     respondToConnectionReq(newPlayer);
@@ -145,11 +145,11 @@ void ServerManager::handleRoomConnectionReq(int roomId, int playerId) {
 
     serverSocket.send(responsePacket, players[playerId].address, players[playerId].port);
 
-    std::cout << "Room connection request!" << std::endl;
+    std::cout << std::endl << "Room connection request!" << std::endl;
     std::cout << "Num of the room: " << roomId << std::endl;
     std::cout << "Player1Id: " << rooms[roomId].player1Id << std::endl;
     std::cout << "Player2Id: " << rooms[roomId].player2Id << std::endl;
-    std::cout << "rooms[roomId].isAvailable: " << rooms[roomId].isAvailable << std::endl;
+    std::cout << "rooms[roomId].isAvailable: " << rooms[roomId].isAvailable << std::endl << std::endl;
 }
 
 void ServerManager::handleClientDisconnection(int roomId, int clientId){
@@ -161,12 +161,13 @@ void ServerManager::handleClientDisconnection(int roomId, int clientId){
     } else {
         rooms[roomId].player2Id = -1;
     } 
+    rooms[roomId].roomGameState.reset();
 
-    std::cout << "Goodbye from clientId " << clientId << " in room " << roomId << std::endl;
+    std::cout << std::endl << "Goodbye from clientId " << clientId << " in room " << roomId << std::endl;
     std::cout << "Num of the room: " << roomId << std::endl;
     std::cout << "Player1Id: " << rooms[roomId].player1Id << std::endl;
     std::cout << "Player2Id: " << rooms[roomId].player2Id << std::endl;
-    std::cout << "rooms[roomId].isAvailable: " << rooms[roomId].isAvailable << std::endl;
+    std::cout << "rooms[roomId].isAvailable: " << rooms[roomId].isAvailable << std::endl << std::endl;
 }
 
 void ServerManager::sendGameState() {
@@ -195,34 +196,26 @@ void ServerManager::sendGameState() {
 }
 
 void ServerManager::runRooms() {
+    bool Paddle1Up   = false;
+    bool Paddle1Down = false;
+    bool Paddle2Up   = false;
+    bool Paddle2Down = false;
+
     players[0].moveUp   = sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::W);
     players[0].moveDown = sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::S);
-
+    
     for (size_t i = 0; i < rooms.size(); i++) {
         if (!rooms[i].isAvailable) {
             rooms[i].roomGameState.moveBall();
 
             rooms[i].roomGameState.handleBallCollisions();
 
-            if (players[rooms[i].player1Id].moveUp && 
-                !(rooms[i].roomGameState.paddle1.getGlobalBounds().intersects(rooms[i].roomGameState.topBorder.getGlobalBounds()))) {
-                    rooms[i].roomGameState.paddle1.move(sf::Vector2f(0, -(PADDLE_X / 2)));
-            }
+            Paddle1Up   = players[rooms[i].player1Id].moveUp;
+            Paddle1Down = players[rooms[i].player1Id].moveDown;
+            Paddle2Up   = players[rooms[i].player2Id].moveUp;
+            Paddle2Down = players[rooms[i].player2Id].moveDown;
 
-            if (players[rooms[i].player1Id].moveDown && 
-                    !(rooms[i].roomGameState.paddle1.getGlobalBounds().intersects(rooms[i].roomGameState.botBorder.getGlobalBounds()))) {
-                    rooms[i].roomGameState.paddle1.move(sf::Vector2f(0, PADDLE_X / 2));
-            }
-
-            if (players[rooms[i].player2Id].moveUp && 
-                !(rooms[i].roomGameState.paddle2.getGlobalBounds().intersects(rooms[i].roomGameState.topBorder.getGlobalBounds()))) {
-                    rooms[i].roomGameState.paddle2.move(sf::Vector2f(0, -(PADDLE_X / 2)));
-            }
-
-            if (players[rooms[i].player2Id].moveDown && 
-                !(rooms[i].roomGameState.paddle2.getGlobalBounds().intersects(rooms[i].roomGameState.botBorder.getGlobalBounds()))) {
-                    rooms[i].roomGameState.paddle2.move(sf::Vector2f(0, PADDLE_X / 2));
-            }
+            rooms[i].roomGameState.handlePaddleMovement(Paddle1Up, Paddle1Down, Paddle2Up, Paddle2Down);
             
             rooms[i].roomGameState.handleGoals();   
         }
@@ -355,7 +348,6 @@ void ClientManager::handleNetworkInput() {
             }
         }
     }
-
 }
 
 void ClientManager::sendPlayerInput() {

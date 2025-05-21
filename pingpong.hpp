@@ -183,6 +183,31 @@ public:
         } else if (ball.getPosition().x > WINDOW_X) {
             gooool(Left);
         }
+        // if (intScore1 >= NUM_OF_GOALS || intScore2 >= NUM_OF_GOALS) {
+            
+        // }
+    }
+
+    void handlePaddleMovement(bool paddle1Up, bool paddle1Down, bool paddle2Up, bool paddle2Down) {
+        if (paddle1Up && 
+                !(paddle1.getGlobalBounds().intersects(topBorder.getGlobalBounds()))) {
+            paddle1.move(sf::Vector2f(0, -(PADDLE_X / 2)));
+        }
+
+        if (paddle1Down && 
+                !(paddle1.getGlobalBounds().intersects(botBorder.getGlobalBounds()))) {
+            paddle1.move(sf::Vector2f(0, PADDLE_X / 2));
+        }
+
+        if (paddle2Up && 
+                !(paddle2.getGlobalBounds().intersects(topBorder.getGlobalBounds()))) {
+            paddle2.move(sf::Vector2f(0, -(PADDLE_X / 2)));
+        }
+
+        if (paddle2Down && 
+                    !(paddle2.getGlobalBounds().intersects(botBorder.getGlobalBounds()))) {
+            paddle2.move(sf::Vector2f(0, PADDLE_X / 2));
+        }
     }
 private: 
     sf::Vector2f velocity;

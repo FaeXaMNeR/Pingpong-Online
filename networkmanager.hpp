@@ -107,8 +107,8 @@ class ClientManager {
         void sendPlayerInput();
 
         void drawGameState(PongState pongState, sf::RenderWindow &window);
-    private:
 
+    private:
         sf::UdpSocket clientSocket;
 
         sf::IpAddress clientAddress;
