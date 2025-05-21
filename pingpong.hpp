@@ -16,6 +16,31 @@ enum Paddle {
     Right
 };
 
+bool quit = false;
+
+void signal_handler(int) {
+    quit = true;
+}
+
+void setQuitFlag(bool value) { quit = value; }
+bool getQuitFlag() { return quit; }
+
+void handleExit(GameMode &gameMode, sf::RenderWindow &window) {
+    sf::Event event;
+    window.pollEvent(event);
+    if (event.type == sf::Event::Closed) {
+        gameMode = None;
+        window.close();
+    }
+    if (event.key.code == sf::Keyboard::Escape) {
+        gameMode = MainMenu;
+    }
+    if (quit) {
+        gameMode = None;
+        window.close();
+    }
+}
+
 class PongState {
 public:
     sf::RectangleShape paddle1;
