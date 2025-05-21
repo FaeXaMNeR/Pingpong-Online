@@ -69,7 +69,6 @@ void ServerManager::handleNetworkInput() {
     for (size_t i = 0; i < PACKETS_PER_FRAME * players.size(); i++) {
         if (serverSocket.receive(inputPacket, clientAddress, clientPort) == sf::Socket::Done) {
             inputPacket >> packetType;
-            std::cout << packetType << std::endl;
             switch (packetType) {
                 case ConnectionRequest: {
                     PlayerInfo newPlayer = {clientAddress, clientPort, static_cast<int>(players.size()), false, false};
@@ -87,10 +86,6 @@ void ServerManager::handleNetworkInput() {
                     inputPacket >> input;
                     players[input.playerId].moveUp = input.moveUp;
                     players[input.playerId].moveDown = input.moveDown;
-
-                    std::cout << "Player Input packet!!!!" << std::endl;
-                    std::cout << "Player up : " << input.moveUp << std::endl;
-                    std::cout << "Player down : " << input.moveDown << std::endl;
 
                     break;
                 }
@@ -228,12 +223,8 @@ void ServerManager::runRooms() {
                 !(rooms[i].roomGameState.paddle2.getGlobalBounds().intersects(rooms[i].roomGameState.botBorder.getGlobalBounds()))) {
                     rooms[i].roomGameState.paddle2.move(sf::Vector2f(0, PADDLE_X / 2));
             }
-
-            if (rooms[i].roomGameState.ball.getPosition().x < 0) {
-                rooms[i].roomGameState.gooool(Right);
-            } else if (rooms[i].roomGameState.ball.getPosition().x > WINDOW_X) {
-                rooms[i].roomGameState.gooool(Left);
-            }
+            
+            rooms[i].roomGameState.handleGoals();   
         }
     }
 }
