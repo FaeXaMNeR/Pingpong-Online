@@ -20,9 +20,6 @@ void signal_handler(int) {
     quit = true;
 }
 
-void setQuitFlag(bool value) { quit = value; }
-bool getQuitFlag() { return quit; }
-
 void handleExit(GameMode &gameMode, sf::RenderWindow &window) {
     sf::Event event;
     window.pollEvent(event);
@@ -60,8 +57,12 @@ int main() {
                     if (window.pollEvent(event)) {
                         gameMode = menu.handleInput(event, window);
                           
-                        handleExit(gameMode, window);             
+                        if (event.type == sf::Event::Closed) {
+                            gameMode = None;
+                            window.close();
+                        }          
                     }  
+                    handleExit(gameMode, window); 
                     window.display();
                 }
                 pongState.reset();
