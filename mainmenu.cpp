@@ -1,57 +1,98 @@
 #include <SFML/Network.hpp>
 
-#include "mainmenu.h"
+#include "mainmenu.hpp"
+#include "constants.hpp"
+#include "pingpong.hpp"
 
-Menu::Menu(float width, float height) {
+Menu::Menu() {
     font.loadFromFile("pong.ttf");
 
-    for (int i = 0; i < MAX_NUMBER_ITEMS; ++i) {
+    for (int i = 0; i < MENU_ITEMS_NUM; ++i) {
         menu[i].setFont(font);
         menu[i].setFillColor(sf::Color(128, 128, 128));
-        menu[i].setCharacterSize(30);
+        menu[i].setCharacterSize(WINDOW_Y / 30);
     }
 
-    menu[0].setString("Play Offline");
-    menu[0].setPosition(sf::Vector2f(width/2 - 160, height/(MAX_NUMBER_ITEMS+1)*1));
+    menu[PlayOffline    ].setString("Play Offline");
+    menu[PlayOffline    ].setPosition(sf::Vector2f(WINDOW_X / 10, 1 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
+    
+    menu[LaunchServer   ].setString("Launch Server");
+    menu[LaunchServer   ].setPosition(sf::Vector2f(WINDOW_X / 10, 2 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
-    menu[1].setString("Launch Server");
-    menu[1].setPosition(sf::Vector2f(width/2 - 120, height/(MAX_NUMBER_ITEMS+1)*2));
+    menu[JoinServer     ].setString("Join Server");
+    menu[JoinServer     ].setPosition(sf::Vector2f(WINDOW_X / 10, 3 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
-    menu[2].setString("Join Server");
-    menu[2].setPosition(sf::Vector2f(width/2 - 80, height/(MAX_NUMBER_ITEMS+1)*3));
+    menu[Exit           ].setString("Exit");
+    menu[Exit           ].setPosition(sf::Vector2f(WINDOW_X / 10, 4 * WINDOW_Y/(MENU_ITEMS_NUM+1)));
 
-    menu[3].setString("Exit");
-    menu[3].setPosition(sf::Vector2f(width/2 - 40, height/(MAX_NUMBER_ITEMS+1)*4));
-
-    menu[0].setFillColor(sf::Color::White); // Выбранный пункт по умолчанию
+    menu[PlayOffline].setFillColor(sf::Color::White); // Выбранный пункт по умолчанию
     selectedItemIndex = 0;
+    logo.setFont(font);
+    logo.setFillColor(sf::Color(200, 200, 200));
+    logo.setCharacterSize(WINDOW_Y / 3);
+    logo.setString("PONG");
+    logo.setPosition(sf::Vector2f(WINDOW_X / 2 , WINDOW_Y / 4));
 }
 
 Menu::~Menu() {}
 
 void Menu::draw(sf::RenderWindow &window) {
-    for (int i = 0; i < MAX_NUMBER_ITEMS; ++i) {
+    window.clear(sf::Color::Black);
+    for (int i = 0; i < MENU_ITEMS_NUM; ++i) {
         window.draw(menu[i]);
     }
+    window.draw(logo);
 }
 
-void Menu::handleInput(sf::Event &event) {
-    if (event.type == sf::Event::KeyReleased) {
+GameMode Menu::handleInput(sf::Event &event, sf::RenderWindow &window) {
+    if (event.type == sf::Event::KeyPressed) {
         switch (event.key.code) {
-            case sf::Keyboard::Up:
-            case sf::Keyboard::W:
+            case sf::Keyboard::Up: {
                 moveUp();
                 break;
+            }
 
-            case sf::Keyboard::Down:
-            case sf::Keyboard::S:
+            case sf::Keyboard::Down: {
                 moveDown();
                 break;
-                
-            default:
+            }
+
+            case sf::Keyboard::Enter: {
+                switch (selectedItemIndex) {
+                    case PlayOffline: {
+                        return OfflineGame;
+                        break;
+                    }
+
+                    case LaunchServer: {
+                        return Server;
+                        break;
+                    }
+
+                    case JoinServer: {
+                        return Client;
+                        break;
+                    }
+
+                    case Exit: {
+                        window.close();
+                        return None;
+                        break;
+                    }
+
+                    default: {
+                        break;
+                    }
+                }
+            }
+
+            default: {
                 break;
+            }
         }
     }
+
+    return MainMenu;
 }
 
 void Menu::moveUp() {
@@ -63,7 +104,7 @@ void Menu::moveUp() {
 }
 
 void Menu::moveDown() {
-    if (selectedItemIndex + 1 < MAX_NUMBER_ITEMS) {
+    if (selectedItemIndex + 1 < MENU_ITEMS_NUM) {
         menu[selectedItemIndex].setFillColor(sf::Color(128, 128, 128));
         selectedItemIndex++;
         menu[selectedItemIndex].setFillColor(sf::Color::White);
