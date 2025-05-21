@@ -27,11 +27,18 @@ Menu::Menu() {
 
     menu[PlayOffline].setFillColor(sf::Color::White); // Выбранный пункт по умолчанию
     selectedItemIndex = 0;
+
     logo.setFont(font);
     logo.setFillColor(sf::Color(200, 200, 200));
     logo.setCharacterSize(WINDOW_Y / 3);
     logo.setString("PONG");
     logo.setPosition(sf::Vector2f(WINDOW_X / 2 , WINDOW_Y / 4));
+
+    rights.setFont(font);
+    rights.setFillColor(sf::Color(128, 128, 128));
+    rights.setCharacterSize(WINDOW_Y / 30);
+    rights.setString("C 2025, Ilya Agarkov, Vlad Petrov \nAll rights reserved... \nKinda, please, don\'t sue us");
+    rights.setPosition(sf::Vector2f(WINDOW_X / 2, WINDOW_Y / 4 + WINDOW_Y / 3));
 }
 
 Menu::~Menu() {}
@@ -42,6 +49,7 @@ void Menu::draw(sf::RenderWindow &window) {
         window.draw(menu[i]);
     }
     window.draw(logo);
+    window.draw(rights);
 }
 
 GameMode Menu::handleInput(sf::Event &event, sf::RenderWindow &window) {

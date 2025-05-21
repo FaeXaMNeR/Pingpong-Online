@@ -23,7 +23,7 @@ sudo apt-get install libsfml-dev
 make
 ```
 
-### Запуск игры
+# Запуск игры
 
 ## Основные режимы:
 
