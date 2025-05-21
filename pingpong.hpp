@@ -25,7 +25,7 @@ public:
     sf::RectangleShape botBorder;
     int intScore1;
     int intScore2;
-
+    
     PongState() {
         paddle1.setSize(sf::Vector2f(PADDLE_X, PADDLE_Y));
         paddle2.setSize(sf::Vector2f(PADDLE_X, PADDLE_Y));
