@@ -30,4 +30,5 @@ class Menu {
         int selectedItemIndex;
         sf::Font font;
         sf::Text menu[MENU_ITEMS_NUM];
+        sf::Text logo;
 };

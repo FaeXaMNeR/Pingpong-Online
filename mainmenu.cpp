@@ -27,6 +27,11 @@ Menu::Menu() {
 
     menu[PlayOffline].setFillColor(sf::Color::White); // Выбранный пункт по умолчанию
     selectedItemIndex = 0;
+    logo.setFont(font);
+    logo.setFillColor(sf::Color(200, 200, 200));
+    logo.setCharacterSize(WINDOW_Y / 3);
+    logo.setString("PONG");
+    logo.setPosition(sf::Vector2f(WINDOW_X / 2 , WINDOW_Y / 4));
 }
 
 Menu::~Menu() {}
@@ -36,6 +41,7 @@ void Menu::draw(sf::RenderWindow &window) {
     for (int i = 0; i < MENU_ITEMS_NUM; ++i) {
         window.draw(menu[i]);
     }
+    window.draw(logo);
 }
 
 GameMode Menu::handleInput(sf::Event &event, sf::RenderWindow &window) {
