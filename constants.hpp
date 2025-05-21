@@ -14,4 +14,4 @@ const int NUM_OF_ROOMS = 5;
 
 const int PACKETS_PER_FRAME = 10;
 
-const int NUM_OF_GOALS = 21;
+const int NUM_OF_GOALS = 30;
