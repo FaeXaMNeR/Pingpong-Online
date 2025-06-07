@@ -82,6 +82,32 @@ class ServerManager {
             window.draw(serverInfoText);
         }
 
+        bool inputWasReceived = false;
+        bool clientConnectedToRoom = false;
+
+        sf::IpAddress getServerAddress() const {
+            return serverAddress;
+        }
+        
+        unsigned short getServerPort() const {
+            return serverPort;
+        }
+        
+        bool setTestBallPosition(int roomId, const sf::Vector2f& position) {
+            if (roomId >= 0 && static_cast<size_t>(roomId) < rooms.size()) {
+                rooms[roomId].roomGameState.ball.setPosition(position);
+                return true;
+            }
+            return false;
+        }
+        
+        bool checkPlayerMoveUp(int playerId) {
+            if (playerId >= 0 && static_cast<size_t>(playerId) < players.size()) {
+                return players[playerId].moveUp;
+            }
+            return false;
+        }
+
     private:
         sf::UdpSocket serverSocket;
         sf::IpAddress serverAddress;
@@ -107,6 +133,16 @@ class ClientManager {
         void sendPlayerInput();
 
         void drawGameState(PongState pongState, sf::RenderWindow &window);
+
+        void setServerInfo(const sf::IpAddress& address, unsigned short port) {
+            serverAddress = address;
+            serverPort = port;
+        }
+        
+        sf::Vector2f getBallPosition(PongState& pongState) {
+            drawGameState(pongState, *(new sf::RenderWindow()));
+            return pongState.ball.getPosition();
+        }
 
     private:
         sf::UdpSocket clientSocket;

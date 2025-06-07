@@ -37,7 +37,7 @@ Menu::Menu() {
     rights.setFont(font);
     rights.setFillColor(sf::Color(128, 128, 128));
     rights.setCharacterSize(WINDOW_Y / 30);
-    rights.setString("C 2025, Ilya Agarkov, Vlad Petrov \nAll rights reserved... \nKinda, please, don\'t sue us");
+    rights.setString("C 2025, Ilya Agarkov, Vlad Petrov \nAll rights reserved");
     rights.setPosition(sf::Vector2f(WINDOW_X / 2, WINDOW_Y / 4 + WINDOW_Y / 3));
 }
 
